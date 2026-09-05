@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Base — token de variáveis e estilos globais do projeto
+   ========================================================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ivory-100 text-navy-800 font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-navy-900;
+  }
+
+  ::selection {
+    @apply bg-gold-500/30 text-navy-900;
+  }
+}
+
+/* ==========================================================================
+   Componentes reutilizáveis (padrões visuais recorrentes)
+   ========================================================================== */
+@layer components {
+  .container-site {
+    @apply mx-auto w-full max-w-container px-5 sm:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm bg-navy-800 px-6 py-3 text-sm font-semibold tracking-wide text-white transition-colors hover:bg-navy-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm bg-gold-500 px-6 py-3 text-sm font-semibold tracking-wide text-navy-900 transition-colors hover:bg-gold-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-800;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm border border-navy-800/20 px-6 py-3 text-sm font-semibold tracking-wide text-navy-800 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white focus:outline-none;
+  }
+
+  .input-field {
+    @apply w-full rounded-sm border border-navy-800/15 bg-white px-4 py-3 text-sm text-navy-800 placeholder:text-navy-400 focus:border-navy-800 focus:outline-none focus:ring-1 focus:ring-navy-800 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .label-field {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-navy-600;
+  }
+
+  .card {
+    @apply rounded-md border border-navy-800/10 bg-white shadow-card;
+  }
+
+  .section-eyebrow {
+    @apply mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-gold-600;
+  }
+
+  .section-title {
+    @apply font-display text-3xl font-semibold leading-tight text-navy-900 sm:text-4xl;
+  }
+}
+
+/* Prosa tipográfica para o corpo dos artigos (Markdown renderizado). */
+.prose-article {
+  @apply text-base leading-relaxed text-navy-700;
+}
+.prose-article h1, .prose-article h2, .prose-article h3 {
+  @apply mt-8 mb-3 text-navy-900;
+}
+.prose-article h1 { @apply text-2xl; }
+.prose-article h2 { @apply text-xl; }
+.prose-article h3 { @apply text-lg; }
+.prose-article p { @apply my-4; }
+.prose-article ul, .prose-article ol { @apply my-4 pl-6 space-y-1.5; }
+.prose-article ul { @apply list-disc; }
+.prose-article ol { @apply list-decimal; }
+.prose-article a { @apply text-navy-700 underline underline-offset-2 decoration-gold-500 hover:decoration-2; }
+.prose-article blockquote {
+  @apply my-5 border-l-4 border-gold-500 bg-gold-500/10 px-5 py-3 italic text-navy-700;
+}
+.prose-article code { @apply rounded-sm bg-navy-800/10 px-1.5 py-0.5 text-sm; }
+.prose-article pre { @apply my-5 overflow-x-auto rounded-md bg-navy-900 p-4 text-sm text-white; }
+.prose-article pre code { @apply bg-transparent p-0 text-white; }
+.prose-article strong { @apply font-semibold text-navy-900; }
+.prose-article hr { @apply my-8 border-navy-800/10; }
