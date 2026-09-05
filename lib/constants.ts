@@ -60,7 +60,9 @@ export const DEFAULT_CONTACT_CHANNELS: SiteContactLinks = {
   whatsapp: "https://wa.me/5511999999999",
   email: "contato@biancamartins.com.br",
   instagram: "https://instagram.com/",
-  linkedin: "https://www.linkedin.com/"
+  linkedin: "https://www.linkedin.com/",
+  address: "Londrina — PR & atendimento remoto para todo o país",
+  hours: "Segunda a sexta, das 9h às 18h"
 };
 
 /** Nome do bucket de capas no Supabase Storage. */

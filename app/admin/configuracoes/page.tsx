@@ -1,8 +1,10 @@
-import { Link2, MessageCircle, AtSign, Briefcase } from "lucide-react";
+import { Bell, Clock, Link2, Mail, MapPin, MessageCircle, AtSign, Briefcase } from "lucide-react";
 
 import ContactChannelsSettingsForm from "@/components/admin/ContactChannelsSettingsForm";
+import EmailNotificationsForm from "@/components/admin/EmailNotificationsForm";
 import { DEFAULT_CONTACT_CHANNELS } from "@/lib/constants";
 import { getStoredContactChannels } from "@/server/site-settings";
+import { getStoredNotifyRecipient } from "@/server/email-notify";
 
 export const metadata = { title: "Configurações do Site", robots: { index: false } };
 
@@ -12,6 +14,13 @@ export default async function SiteConfigPage() {
     saved = (await getStoredContactChannels()) ?? saved;
   } catch {
     // Sem conexão com o Supabase vamos simplesmente pré-exibir os padrões.
+  }
+
+  let notifyRecipient = "";
+  try {
+    notifyRecipient = await getStoredNotifyRecipient();
+  } catch {
+    notifyRecipient = "";
   }
 
   return (
@@ -56,9 +65,53 @@ export default async function SiteConfigPage() {
               {saved.linkedin}
             </span>
           </p>
+          <p className="inline-flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-gold-600" />
+            <span>
+              <strong className="block text-navy-800">Endereço</strong>{" "}
+              {saved.address}
+            </span>
+          </p>
+          <p className="inline-flex items-center gap-2">
+            <Clock className="h-4 w-4 text-gold-600" />
+            <span>
+              <strong className="block text-navy-800">Horário</strong> {saved.hours}
+            </span>
+          </p>
         </div>
 
         <ContactChannelsSettingsForm initial={saved} />
+      </div>
+
+      {/* Notificações por e-mail (SMTP + destino) */}
+      <div className="card p-6">
+        <div className="flex items-center gap-3 pb-1">
+          <span className="flex h-9 w-9 items-center justify-center rounded-sm bg-gold-500/10 text-gold-600">
+            <Bell className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="font-display text-lg font-semibold text-navy-900">
+              E-mail de notificação
+            </h2>
+            <p className="text-sm text-navy-500">
+              Caixa que recebe os contatos enviados pelo formulário do site.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-x-8 gap-y-3 border-b border-navy-800/10 pb-4 text-sm text-navy-600">
+          <p className="inline-flex items-center gap-2">
+            <Mail className="h-4 w-4 text-gold-600" />
+            <span>
+              <strong className="block text-navy-800">Destinatário atual</strong>{" "}
+              {notifyRecipient || saved.email}
+            </span>
+          </p>
+        </div>
+
+        <div className="mt-4">
+          <EmailNotificationsForm initial={notifyRecipient} />
+        </div>
       </div>
     </div>
   );

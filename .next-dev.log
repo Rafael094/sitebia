@@ -8,79 +8,9 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 2.2s
+ ✓ Ready in 1588ms
  ○ Compiling / ...
- ✓ Compiled / in 3s (823 modules)
- ✓ Compiled in 338ms (283 modules)
- GET / 500 in 4141ms
- ✓ Compiled in 500ms (812 modules)
- GET / 200 in 751ms
- ○ Compiling /contato ...
- ✓ Compiled /contato in 606ms (928 modules)
- GET /contato 200 in 1418ms
- ✓ Compiled /middleware in 491ms (171 modules)
- ✓ Compiled /admin/login in 311ms (987 modules)
- GET /admin/login 200 in 1146ms
- GET /admin/login?next=%2Fadmin 200 in 478ms
- GET / 200 in 607ms
- GET /contato 200 in 537ms
- GET /admin/login 200 in 523ms
-   Reload env: .env.local
- ✓ Compiled in 147ms (468 modules)
- ✓ Compiled / in 233ms (524 modules)
- GET / 200 in 924ms
- ✓ Compiled /contato in 105ms (646 modules)
- GET /contato 200 in 963ms
- ✓ Compiled /admin/login in 168ms (498 modules)
- GET /admin/login 200 in 1214ms
- GET /admin/login 200 in 382ms
- ○ Compiling /admin/dashboard ...
- ✓ Compiled /admin/dashboard in 707ms (830 modules)
- ✓ Compiled in 484ms (312 modules)
- GET /admin/login 200 in 182ms
- GET /admin/login 200 in 48ms
- GET /admin/dashboard 200 in 1470ms
- POST /admin/login 303 in 2729ms
- GET /admin/dashboard 200 in 113ms
- GET /admin/dashboard 200 in 88ms
- ○ Compiling /admin/servicos ...
- ✓ Compiled /admin/servicos in 675ms (991 modules)
- GET /admin/login 200 in 77ms
- GET /admin/servicos 200 in 1322ms
- GET /admin/servicos 200 in 79ms
- GET /admin/servicos 200 in 537ms
- GET /admin/servicos 200 in 238ms
- GET /admin/servicos 200 in 635ms
- ○ Compiling /admin/mensagens ...
- ✓ Compiled /admin/mensagens in 598ms (995 modules)
- GET /admin/mensagens 200 in 1088ms
- ✓ Compiled /admin/conteudos in 475ms (1031 modules)
- GET /admin/conteudos 200 in 944ms
- GET /admin/servicos 200 in 285ms
- ✓ Compiled /admin/servicos/[id]/editar in 450ms (1043 modules)
- GET /admin/servicos/084f361f-19b4-414e-97ab-6a686d6bc272/editar 200 in 1730ms
- GET /admin/conteudos 200 in 272ms
- ○ Compiling /admin/conteudos/[id]/editar ...
- ✓ Compiled /admin/conteudos/[id]/editar in 849ms (1074 modules)
- GET /admin/login 200 in 210ms
- GET /admin/conteudos/c03ae6ca-ef7e-4cbe-b5b9-3775c5b9eb4a/editar 200 in 2351ms
- GET /admin/conteudos/c03ae6ca-ef7e-4cbe-b5b9-3775c5b9eb4a/editar 200 in 72ms
- POST /admin/conteudos/c03ae6ca-ef7e-4cbe-b5b9-3775c5b9eb4a/editar 200 in 647ms
- GET /admin/conteudos 200 in 624ms
- POST /admin/conteudos/c03ae6ca-ef7e-4cbe-b5b9-3775c5b9eb4a/editar 303 in 1073ms
- ○ Compiling /admin/configuracoes ...
- ✓ Compiled /admin/configuracoes in 676ms (1071 modules)
- GET /admin/configuracoes 200 in 1073ms
- ✓ Compiled /contato in 315ms (775 modules)
- GET /admin/login 200 in 79ms
- GET /admin/configuracoes 200 in 224ms
- GET /contato 200 in 1209ms
- ✓ Compiled / in 455ms (798 modules)
- GET / 200 in 1002ms
- ✓ Compiled /_not-found in 507ms (1128 modules)
- GET /images/bianca-profile.jpg 404 in 1110ms
- ✓ Compiled /atuacao in 387ms (1128 modules)
- GET /atuacao 200 in 765ms
- ✓ Compiled /conteudos in 499ms (1135 modules)
- GET /conteudos 200 in 949ms
- GET /contato 200 in 243ms
+ ✓ Compiled / in 4.3s (865 modules)
+ ✓ Compiled in 610ms (310 modules)
+ GET / 200 in 6261ms
+ GET / 200 in 786ms

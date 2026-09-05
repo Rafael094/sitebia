@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Mail, Instagram, Linkedin, Phone } from "lucide-react";
+import { ArrowUpRight, Clock, Mail, Instagram, Linkedin, MapPin, Phone } from "lucide-react";
 
 import Logo from "@/components/brand/Logo";
 import { useContactChannels } from "@/components/site/ContactChannelsProvider";
@@ -15,14 +15,12 @@ export default function Footer() {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <footer className="bg-navy-900 text-ivory-100">
+    <footer className="bg-navy-900 text-ivory-100" data-header-theme="dark">
       <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         {/* Marca */}
         <div className="sm:col-span-2 lg:col-span-1">
-          {/* Logo reverso */}
-          <div className="[--orbit:#C5A059] [--mono:#fff]">
-            <Logo variant="light" />
-          </div>
+          {/* Logo reverso (fundo escuro) */}
+          <Logo variant="light" />
           <p className="mt-5 max-w-xs text-sm leading-relaxed text-ivory-200/70">
             {SITE.description}
           </p>
@@ -69,6 +67,14 @@ export default function Footer() {
             Contato
           </h3>
           <ul className="mt-4 space-y-3 text-sm">
+            <li className="flex items-start gap-2 text-ivory-200/80">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
+              <span>{contact.address}</span>
+            </li>
+            <li className="flex items-start gap-2 text-ivory-200/80">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
+              <span>{contact.hours}</span>
+            </li>
             <li>
               <a
                 href={`mailto:${contact.email}`}

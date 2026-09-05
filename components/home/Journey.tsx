@@ -1,4 +1,7 @@
+"use client";
+
 import SectionHeading from "@/components/ui/SectionHeading";
+import { useSectionContent } from "@/components/site/SectionsProvider";
 
 const STEPS = [
   {
@@ -23,20 +26,24 @@ const STEPS = [
   }
 ];
 
-/** Jornada — "Como posso ajudar": 4 etapas encadeadas. */
+/** Jornada — "Como posso ajudar": 4 etapas. Cabeçalho vem de page_contents (home_journey_header). */
 export default function Journey() {
+  const c = useSectionContent("home_journey_header");
+
   return (
-    <section className="bg-navy-900 py-20 text-ivory-100">
+    <section data-header-theme="dark" className="bg-navy-900 py-20 text-ivory-100">
       <div className="container-site">
         <SectionHeading
-          eyebrow="Como posso ajudar"
-          title="Uma jornada clara, do ativo ao contrato"
-          description="Cada projeto passa por etapas estruturadas — você sabe exatamente em que ponto está e para onde vamos."
+          eyebrow={c.badge_text || "COMO POSSO AJUDAR"}
+          title={c.title || "Uma jornada clara, do ativo ao contrato"}
+          description={
+            c.description ||
+            "Cada projeto passa por etapas estruturadas — você sabe exatamente em que ponto está e para onde vamos."
+          }
           className="[&_h2]:text-white [&_.text-navy-600]:text-ivory-200/70"
         />
 
         <ol className="relative mt-14 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          {/* linha divisória */}
           <div className="pointer-events-none absolute left-0 right-0 top-[26px] hidden h-px bg-gradient-to-r from-gold-500/0 via-gold-500/50 to-gold-500/0 lg:block" />
 
           {STEPS.map((step, i) => (
@@ -52,7 +59,6 @@ export default function Journey() {
                   {step.text}
                 </p>
               </div>
-              {/* seta entre etapas (desktop) */}
               {i < STEPS.length - 1 && (
                 <span className="pointer-events-none absolute right-0 top-4 hidden text-gold-500 lg:inline">
                   →

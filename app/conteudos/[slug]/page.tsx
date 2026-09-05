@@ -9,6 +9,7 @@ import CtaBanner from "@/components/ui/CtaBanner";
 import { ARTICLE_CATEGORIES } from "@/lib/constants";
 import { getAdjacentArticles, getPublishedArticleBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/utils";
+import ShareBar from "@/components/ui/ShareBar";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   return (
     <>
       {/* Breadcrumb */}
-      <section className="bg-ivory-100 pt-28">
+      <section data-header-theme="light" className="bg-ivory-100 pt-28">
         <div className="container-site flex flex-wrap items-center justify-between gap-3 border-b border-navy-800/10 pb-5">
           <p className="inline-flex flex-wrap items-center gap-1.5 text-xs text-navy-500">
             <Link href="/" className="hover:text-navy-800">Início</Link>
@@ -49,7 +50,7 @@ export default async function ArticleDetailPage({ params }: Props) {
         </div>
       </section>
 
-      <article className="bg-ivory-100">
+      <article data-header-theme="light" className="bg-ivory-100">
         <div className="container-site max-w-4xl pt-10">
           <p className="section-eyebrow">{category.label}</p>
           <h1 className="font-display text-3xl font-bold leading-tight text-navy-900 sm:text-4xl">
@@ -92,6 +93,14 @@ export default async function ArticleDetailPage({ params }: Props) {
             <RichText content={article.content} />
           </div>
         </div>
+
+          <div className="mb-8 border-t border-navy-800/10 pt-6">
+            <ShareBar
+              title={article.title}
+              url={`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/conteudos/${article.slug}`}
+            />
+          </div>
+
 
         {/* Navegação anterior/próxima */}
         <div className="container-site max-w-4xl pt-12">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessagesSquare, Save, ExternalLink } from "lucide-react";
+import { Clock, MapPin, MessagesSquare, Save, ExternalLink } from "lucide-react";
 
 import { saveContactChannelSettingsAction } from "@/server/site-settings";
 import type { SiteContactLinks } from "@/lib/types";
@@ -95,6 +95,38 @@ export default function ContactChannelsSettingsForm({
           defaultValue={initial.linkedin}
           required
           placeholder="https://www.linkedin.com/…"
+          className="input-field"
+        />
+      </section>
+
+      <section>
+        <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-navy-600">
+          <MapPin className="h-3.5 w-3.5 text-gold-600" /> Endereço / área de atendimento
+        </p>
+        <p className="mb-1 text-xs text-navy-400">
+          Exibido na página “Contato” e no rodapé. Ex.: Londrina — PR & atendimento remoto para todo o país.
+        </p>
+        <input
+          name="contact_address"
+          defaultValue={initial.address}
+          required
+          placeholder="Londrina — PR & atendimento remoto para todo o país"
+          className="input-field"
+        />
+      </section>
+
+      <section>
+        <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-navy-600">
+          <Clock className="h-3.5 w-3.5 text-gold-600" /> Horário de atendimento
+        </p>
+        <p className="mb-1 text-xs text-navy-400">
+          Exibido na página “Contato” e no rodapé. Ex.: Segunda a sexta, das 9h às 18h.
+        </p>
+        <input
+          name="contact_hours"
+          defaultValue={initial.hours}
+          required
+          placeholder="Segunda a sexta, das 9h às 18h"
           className="input-field"
         />
       </section>

@@ -1,95 +1,112 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 /**
- * Logo "Bianca Martins" reconstruída 100% em SVG:
- *  - Monograma "BM" central
- *  - Órbita elíptica ao redor da esfera
- *  - Esfera dourada (champagne)
- *  - Tipografia institucional ao lado
+ * Logo "Bianca Martins" — vetorial, 100% SVG, fiel à marca original:
+ *   • Monograma com o BIANCA "B" no topo e o "M" na base, encaixado na curva
+ *     inferior do "B" (cria o nó visual característico da logomarca);
+ *   • Órbita elíptica em dourado champagne cortando na diagonal com a esfera
+ *     no seu topo;
+ *   • Tipografia BIANCA MARTINS (Cinzel/Georgia, caixa alta) + subtítulo
+ *     "TRANSFERÊNCIA DE TECNOLOGIA E PI".
  *
- * Prop `compact`: exibe apenas o símbolo (header sobre fundo claro/escuro).
+ * As cores são controladas pela prop `variant` (sem CSS variables):
+ *   - "dark"  → monograma #0D1B2A + dourado #C5A059  (para fundos claros)
+ *   - "light" → monograma #FFFFFF + dourado #C5A059  (para fundos navy/escuros)
+ *
+ * Uso típico: <Logo variant="light" height={56} />
  */
 export default function Logo({
-  variant = "default",
-  className,
-  symbolClassName
+  variant = "dark",
+  height = 52,
+  className = ""
 }: {
-  /** default = símbolo + texto | compact = somente átomo | light = texto branco */
-  variant?: "default" | "compact" | "light";
+  /** dark = header/área clara | light = sobre fundo escuro (navy/footer). */
+  variant?: "light" | "dark";
+  /** Altura (px) do símbolo/átomo. */
+  height?: number;
   className?: string;
-  symbolClassName?: string;
 }) {
+  const mono = variant === "dark" ? "#0D1B2A" : "#FFFFFF";
+  const gold = "#C5A059";
+  const sub = variant === "dark" ? "#a9843f" : gold;
+
   return (
     <Link
       href="/"
-      className={cn("group inline-flex items-center gap-3", className)}
       aria-label="Bianca Martins — Início"
+      className={`group inline-flex items-center gap-3 text-left ${className}`.trim()}
     >
-      {/* Símbolo: monograma + órbita + esfera */}
-      <span className={cn("relative block h-11 w-11 shrink-0", symbolClassName)}>
+      {/* Símbolo: monograma B/M encaixado + órbita + esfera dourada */}
+      <span
+        aria-hidden="true"
+        style={{ width: height, height }}
+        className="block shrink-0"
+      >
         <svg
-          viewBox="0 0 64 64"
-          className="h-full w-full"
+          viewBox="0 0 220 220"
+          width="100%"
+          height="100%"
           role="img"
-          aria-label="Monograma BM com órbita e esfera dourada"
+          aria-label="Monograma BM com órbita elíptica e esfera dourada"
         >
-          {/* Órbita elíptica inclinada */}
-          <ellipse
-            cx="32"
-            cy="32"
-            rx="29"
-            ry="11.5"
+          {/* Órbita diagonal — arco traseiro */}
+          <path
+            d="M 40,132 C 14,180 96,206 166,152 C 214,108 198,40 150,44"
+            stroke={gold}
+            strokeWidth="4"
+            strokeLinecap="round"
             fill="none"
-            stroke="var(--orbit, #C5A059)"
-            strokeWidth="1.6"
-            transform="rotate(-24 32 32)"
-            opacity="0.9"
           />
-          {/* Esfera dourada sobre a órbita */}
-          <circle cx="51" cy="17" r="4.5" fill="#C5A059" className="drop-shadow-sm" />
 
-          {/* Anel/círculo de fundo do monograma */}
-          <circle cx="32" cy="32" r="16.5" fill="none" stroke="#0D1B2A" strokeWidth="1" opacity="0.35" />
-
-          {/* Monograma BM em serifa central */}
+          {/* Monograma "B" (topo) e "M" (base, encaixada na curva inferior do B) */}
           <text
-            x="32"
-            y="32.5"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontFamily="'Cinzel', serif"
-            fontSize="15"
+            x="46"
+            y="120"
+            fontFamily="'Cinzel', 'Times New Roman', serif"
             fontWeight="700"
-            fill="var(--mono, #0D1B2A)"
-            letterSpacing="0.5"
+            fontSize="104"
+            fill={mono}
           >
-            BM
+            B
           </text>
+          <text
+            x="100"
+            y="196"
+            fontFamily="'Cinzel', 'Times New Roman', serif"
+            fontWeight="700"
+            fontSize="104"
+            fill={mono}
+          >
+            M
+          </text>
+
+          {/* Arco frontal da órbita + esfera dourada no topo */}
+          <path
+            d="M 150,44 C 108,58 60,100 40,132"
+            stroke={gold}
+            strokeWidth="4"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <circle cx="184" cy="30" r="9" fill={gold} />
         </svg>
       </span>
 
-      {/* Tipografia institucional */}
-      {variant !== "compact" && (
-        <span className="flex flex-col leading-none">
-          <span
-            className={cn(
-              "font-display text-lg font-bold tracking-wide",
-              variant === "light" ? "text-white" : "text-navy-900"
-            )}
-          >
-            Bianca Martins
-          </span>
-          <span
-            className={cn(
-              "mt-1 text-[10px] font-medium uppercase tracking-[0.18em]",
-              variant === "light" ? "text-gold-300" : "text-gold-600"
-            )}
-          >
-            Transferência de Tecnologia
-          </span>
+      {/* Palavra/o texto institucional */}
+      <span className="flex min-w-0 flex-col leading-tight">
+        <span
+          className="font-display text-[0.98rem] font-bold uppercase tracking-[0.12em] sm:text-xl sm:tracking-[0.15em]"
+          style={{ color: mono }}
+        >
+          Bianca Martins
         </span>
-      )}
+        <span
+          className="mt-0.5 text-[0.52rem] font-semibold uppercase tracking-[0.12em] sm:text-[0.66rem] sm:tracking-[0.16em]"
+          style={{ color: sub }}
+        >
+          Transferência de Tecnologia e PI
+        </span>
+      </span>
     </Link>
   );
 }

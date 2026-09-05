@@ -8,8 +8,10 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import { ContactChannelsProvider } from "@/components/site/ContactChannelsProvider";
+import { SectionsProvider } from "@/components/site/SectionsProvider";
 import { SITE } from "@/lib/constants";
 import { getPublicContactChannels } from "@/lib/settings";
+import { getSiteSectionMap } from "@/lib/site-content";
 
 /**
  * Fontes via next/font (self-hosted, otimizadas).
@@ -51,19 +53,23 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children
 }: Readonly<{ children: ReactNode }>) {
-  // Canais de contato editáveis pelo painel (com fallback caso o banco esteja
-  // indisponível durante um build/recuperação).
+  // Canais de contato editáveis pelo painel (com fallback caso o banco falhe).
   const contactChannels = await getPublicContactChannels();
+
+  // Conteúdos dinâmicos das seções (page_contents) — unidos aos padrões.
+  const siteSections = await getSiteSectionMap().catch(() => ({}));
 
   return (
     <html lang="pt-BR" className={`${cinzel.variable} ${montserrat.variable}`}>
       <body className="flex min-h-screen flex-col">
-        <ContactChannelsProvider channels={contactChannels}>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <WhatsAppButton />
-        </ContactChannelsProvider>
+        <SectionsProvider contents={siteSections}>
+          <ContactChannelsProvider channels={contactChannels}>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <WhatsAppButton />
+          </ContactChannelsProvider>
+        </SectionsProvider>
       </body>
     </html>
   );

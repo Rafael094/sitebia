@@ -82,6 +82,8 @@ create table if not exists public.site_settings (
   contact_email   text not null default 'contato@biancamartins.com.br',
   instagram_link  text not null default 'https://instagram.com/',
   linkedin_link   text not null default 'https://www.linkedin.com/',
+  contact_address text not null default 'Londrina - PR & atendimento remoto para todo o pais',
+  contact_hours   text not null default 'Segunda a sexta, das 9h as 18h',
   updated_at      timestamptz not null default now()
 );
 
@@ -89,6 +91,13 @@ create table if not exists public.site_settings (
 insert into public.site_settings (id)
 values (1)
 on conflict (id) do nothing;
+
+-- Migracao p/ instancias existentes: adiciona (se ainda nao existirem) as colunas
+-- de endereco e horario editaveis pelo painel (nao remove valores, apenas preenche padrao).
+alter table public.site_settings
+  add column if not exists contact_address text not null default 'Londrina - PR & atendimento remoto para todo o pais';
+alter table public.site_settings
+  add column if not exists contact_hours text not null default 'Segunda a sexta, das 9h as 18h';
 
 -- ================================================================
 -- 4. TRIGGERS — atualizacao automatica de "updated_at"

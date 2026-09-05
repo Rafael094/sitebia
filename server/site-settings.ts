@@ -14,7 +14,9 @@ export async function getStoredContactChannels(): Promise<SiteContactLinks | nul
   const admin = getAdminSupabaseClient();
   const { data, error } = await admin
     .from("site_settings")
-    .select("whatsapp_link, contact_email, instagram_link, linkedin_link")
+    .select(
+      "whatsapp_link, contact_email, instagram_link, linkedin_link, contact_address, contact_hours"
+    )
     .eq("id", 1)
     .maybeSingle();
   if (error) throw error;
@@ -37,7 +39,9 @@ export async function saveContactChannelSettingsAction(
     whatsapp: fieldOf("whatsapp"),
     email: fieldOf("contact_email"),
     instagram: fieldOf("instagram"),
-    linkedin: fieldOf("linkedin")
+    linkedin: fieldOf("linkedin"),
+    address: fieldOf("contact_address"),
+    hours: fieldOf("contact_hours")
   };
 
   const blank = Object.entries(draft).find(([, value]) => !value);

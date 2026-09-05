@@ -13,7 +13,7 @@ export default function LatestArticles({ articles }: { articles: Article[] }) {
   const rest = articles.slice(1);
 
   return (
-    <section className="bg-ivory-100 py-20">
+    <section data-header-theme="light" className="bg-ivory-100 py-20">
       <div className="container-site">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading

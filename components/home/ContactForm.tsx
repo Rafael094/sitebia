@@ -1,31 +1,52 @@
 "use client";
 
-"use client";
-
 import { useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 
-import { submitContactMessage } from "@/server/contact";
-
-/** Formulário público de contato (grava em contact_messages pelo side do servidor). */
+/**
+ * Formulário público de contato.
+ * Envia para a API Route /api/contact que aplica anti-spam (honeypot +
+ * rate limiting por IP), grava em contact_messages e dispara o e-mail SMTP
+ * para o destino configurado no painel.
+ */
 export default function ContactForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const fd = new FormData(e.currentTarget as HTMLFormElement);
+
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+
     try {
-      const result = await submitContactMessage(fd);
-      if (!result.ok) {
-        setError(result.error);
-      } else {
-        setSent(true);
-        (e.currentTarget as HTMLFormElement).reset();
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fd.get("name")?.toString().trim() ?? "",
+          email: fd.get("email")?.toString().trim() ?? "",
+          phone: fd.get("phone")?.toString().trim() ?? "",
+          subject: fd.get("subject")?.toString().trim() ?? "",
+          message: fd.get("message")?.toString().trim() ?? "",
+          // Honeypot anti-robô (invisível para humanos).
+          website_sweet: fd.get("website_sweet")?.toString() ?? ""
+        })
+      });
+
+      const data = (await res.json().catch(() => null)) as
+        | { ok: boolean; error?: string | null }
+        | null;
+
+      if (res.status === 429 || !res.ok || !data?.ok) {
+        setError(data?.error || "Não foi possível enviar. Tente novamente.");
+        return;
       }
+      setSent(true);
+      form.reset();
     } catch {
       setError("Não foi possível enviar agora. Tente novamente.");
     } finally {
@@ -37,9 +58,12 @@ export default function ContactForm() {
     return (
       <div className="card p-10 text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-gold-500" />
-        <h3 className="mt-4 font-display text-xl font-semibold text-navy-900">Mensagem enviada!</h3>
+        <h3 className="mt-4 font-display text-xl font-semibold text-navy-900">
+          Mensagem enviada!
+        </h3>
         <p className="mx-auto mt-2 max-w-sm text-sm text-navy-600">
-          Agradecemos o contato. Sua mensagem ficou registrada e retornaremos o mais breve possível.
+          Agradecemos o contato. Sua mensagem ficou registrada e retornaremos o
+          mais breve possível.
         </p>
         <button type="button" onClick={() => setSent(false)} className="btn-ghost mt-6">
           Enviar nova mensagem
@@ -56,26 +80,35 @@ export default function ContactForm() {
         </p>
       )}
 
+      {/* Honeypot: preenchido apenas por bots. Oculto fora da tela. */}
+      <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor="website_sweet" className="sr-only">Deixe em branco</label>
+        <input
+          id="website_sweet"
+          name="website_sweet"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          defaultValue=""
+        />
+      </div>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className="label-field">Nome *</label>
-          <input id="name" name="name" required minLength={2} className="input-field"
-            placeholder="Seu nome" />
+          <input id="name" name="name" required minLength={2} className="input-field" placeholder="Seu nome" />
         </div>
         <div>
           <label htmlFor="email" className="label-field">E-mail *</label>
-          <input id="email" name="email" type="email" required className="input-field"
-            placeholder="voce@empresa.com" />
+          <input id="email" name="email" type="email" required className="input-field" placeholder="voce@empresa.com" />
         </div>
         <div>
           <label htmlFor="phone" className="label-field">Telefone / WhatsApp</label>
-          <input id="phone" name="phone" type="tel" className="input-field"
-            placeholder="(00) 00000-0000" />
+          <input id="phone" name="phone" type="tel" className="input-field" placeholder="(00) 00000-0000" />
         </div>
         <div>
           <label htmlFor="subject" className="label-field">Assunto</label>
-          <input id="subject" name="subject" className="input-field"
-            placeholder="Ex.: Parceria de P&D" />
+          <input id="subject" name="subject" className="input-field" placeholder="Ex.: Parceria de P&D" />
         </div>
       </div>
 
@@ -104,3 +137,4 @@ export default function ContactForm() {
     </form>
   );
 }
+

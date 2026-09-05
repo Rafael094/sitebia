@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import {
   Menu,
   Briefcase,
   Settings,
+  SquareStack,
   X
 } from "lucide-react";
 
@@ -25,10 +26,11 @@ const NAV_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/servicos": Briefcase,
   "/admin/conteudos": FileText,
   "/admin/mensagens": Inbox,
+  "/admin/secoes": SquareStack,
   "/admin/configuracoes": Settings
 };
 
-/** Casca visual do painel com navegação lateral responsiva. */
+/** Casca visual do painel com navegaÃ§Ã£o lateral responsiva. */
 export default function AdminChrome({
   children,
   userName
@@ -64,7 +66,7 @@ export default function AdminChrome({
         )}
       >
         <div className="flex items-center justify-between gap-2 border-b border-white/10 px-5 py-5">
-          <div className="[--orbit:#C5A059] [--mono:#FFFFFF]">
+          <div className="w-fit">
             <Logo variant="light" />
           </div>
           <button
@@ -129,7 +131,7 @@ export default function AdminChrome({
         </div>
       </aside>
 
-      {/* Conteúdo */}
+      {/* ConteÃºdo */}
       <div className="min-w-0 flex-1">
         {/* Barra superior mobile */}
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-navy-800/10 bg-ivory-100/95 px-4 py-3 backdrop-blur lg:hidden">
@@ -150,3 +152,5 @@ export default function AdminChrome({
     </div>
   );
 }
+
+

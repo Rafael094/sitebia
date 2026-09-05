@@ -41,7 +41,7 @@ export default async function ServiceDetailPage({ params }: Props) {
   return (
     <>
       {/* Cabeçalho escuro com breadcrumb */}
-      <section className="bg-navy-900 pb-14 pt-32 text-ivory-100">
+      <section data-header-theme="dark" className="bg-navy-900 pb-14 pt-32 text-ivory-100">
         <div className="container-site">
           <p className="mb-4 inline-flex flex-wrap items-center gap-1.5 text-xs text-ivory-200/60">
             <Link href="/" className="hover:text-white">Início</Link>
@@ -64,7 +64,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="bg-ivory-100 py-16">
+      <section data-header-theme="light" className="bg-ivory-100 py-16">
         <div className="container-site grid gap-12 lg:grid-cols-[1fr_360px]">
           <article>
             <RichText content={service.description} />
@@ -106,7 +106,7 @@ export default async function ServiceDetailPage({ params }: Props) {
       </section>
 
       {others.length > 0 && (
-        <section className="bg-ivory-100 pb-4">
+        <section data-header-theme="light" className="bg-ivory-100 pb-4">
           <div className="container-site">
             <h2 className="mb-6 font-display text-2xl font-semibold text-navy-900">
               Outras áreas de atuação

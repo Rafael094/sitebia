@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import Hero from "@/components/home/Hero";
+import About from "@/components/home/About";
 import ServicesOverview from "@/components/home/ServicesOverview";
 import Journey from "@/components/home/Journey";
 import LatestArticles from "@/components/home/LatestArticles";
@@ -31,6 +32,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+      <About />
       <ServicesOverview services={services} />
       <Journey />
       <LatestArticles articles={articles} />
