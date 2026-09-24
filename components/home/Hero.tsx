@@ -10,7 +10,7 @@ import { useSectionContent } from "@/components/site/SectionsProvider";
  * Hero da Home - conteúdo dinâmico vindo de page_contents (home_hero),
  * com fallback idêntico ao texto original. O visual é mantido.
  */
-const PORTRAIT_PATH = "/images/1702302801691.jpg";
+const PORTRAIT_PATH = "/images/bianca-martins.jpg";
 
 /** Divide o marcador **...** para destaque dourado no título (H1). */
 function splitTitle(raw: string) {

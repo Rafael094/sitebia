@@ -10,9 +10,9 @@ import { saveSectionContentAction } from "@/server/site-sections-admin";
 import type { PageContent, PageSectionKey } from "@/lib/types";
 
 /**
- * FormulÃ¡rio de ediÃ§Ã£o de uma seÃ§Ã£o institucional (page_contents).
- * Campos estruturais (badge/tÃ­tulo/botÃµes/selo) sÃ£o textos simples;
- * descriÃ§Ã£o/citaÃ§Ã£o abrem editor de texto rico (HTML) para manter o visual.
+ * Formulário de edição de uma seção institucional (page_contents).
+ * Campos estruturais (badge/título/botões/selo) são textos simples;
+ * descrição/citação abrem editor de texto rico (HTML) para manter o visual.
  */
 export default function SectionEditorForm({
   sectionKey,
@@ -59,13 +59,13 @@ export default function SectionEditorForm({
       )}
       {status.kind === "success" && (
         <p role="status" className="rounded-sm border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          ConteÃºdo salvo. As pÃ¡ginas pÃºblicas jÃ¡ exibem o novo texto.
+          Conteúdo salvo. As páginas públicas já exibem o novo texto.
         </p>
       )}
 
       <div className="rounded-sm border border-navy-800/10 bg-ivory-50 px-4 py-3 text-xs text-navy-500">
         <span className="font-semibold uppercase tracking-wide text-navy-600">
-          {meta.group} Â· {meta.label}
+          {meta.group} · {meta.label}
         </span>
         <span className="mt-0.5 block text-navy-600">{meta.hint}</span>
         <code className="mt-1 inline-block rounded-sm bg-white px-1.5 py-0.5 text-[11px] text-navy-500">
@@ -76,20 +76,20 @@ export default function SectionEditorForm({
       {content.badge_text !== undefined && (
         <div>
           <label className="label-field">Badge / eyebrow</label>
-          <input name="badge_text" defaultValue={content.badge_text} className="input-field" placeholder="ex.: O QUE EU FAÃ‡O" />
+          <input name="badge_text" defaultValue={content.badge_text} className="input-field" placeholder="ex.: O QUE EU FAÇO" />
         </div>
       )}
 
       {content.title && (
         <div>
-          <label className="label-field">TÃ­tulo</label>
-          <textarea name="title" defaultValue={content.title} className="input-field" placeholder="TÃ­tulo da seÃ§Ã£o" />
+          <label className="label-field">Título</label>
+          <textarea name="title" defaultValue={content.title} className="input-field" placeholder="Título da seção" />
         </div>
       )}
 
       {content.subtitle && (
         <div>
-          <label className="label-field">SubtÃ­tulo</label>
+          <label className="label-field">Subtítulo</label>
           <textarea name="subtitle" defaultValue={content.subtitle} className="input-field" placeholder="Frase de apoio" />
         </div>
       )}
@@ -97,18 +97,18 @@ export default function SectionEditorForm({
       {content.description !== undefined && (
         <RichTextField
           name="description"
-          label="DescriÃ§Ã£o / texto de apoio"
+          label="Descrição / texto de apoio"
           value={content.description}
-          hint="Editor de texto rico: negrito, listas, citaÃ§Ãµes e parÃ¡grafos sÃ£o preservados."
+          hint="Editor de texto rico: negrito, listas, citações e parágrafos são preservados."
         />
       )}
 
       {content.quote_text && (
         <RichTextField
           name="quote_text"
-          label="CitaÃ§Ã£o"
+          label="Citação"
           value={content.quote_text}
-          hint="Destaque em forma de citaÃ§Ã£o dentro da seÃ§Ã£o."
+          hint="Destaque em forma de citação dentro da seção."
         />
       )}
       {twoButtons && (

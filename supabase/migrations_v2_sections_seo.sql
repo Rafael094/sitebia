@@ -80,7 +80,7 @@ values (
   '“Inovar sem proteger é construir sobre areia. Estruturei cada etapa para que a sua tecnologia gere valor — com segurança jurídica.”',
   'Agendar diagnóstico', '/contato',
   'Conhecer a atuação', '/atuacao',
-  '+10 ANOS', 'dedicados a PI & inovação', '/images/1702302801691.jpg'
+  '+10 ANOS', 'dedicados a PI & inovação', '/images/bianca-martins.jpg'
 )
 on conflict (section_key) do nothing;
 

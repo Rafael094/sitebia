@@ -31,7 +31,7 @@ async function upsertService(formData: FormData, id?: string) {
   const orderIndex = Number(formData.get("order_index") ?? 0) || 0;
   const isActive = formData.get("is_active") === "on";
 
-  if (!title) return { ok: false, error: "Informe o tÃ­tulo do serviÃ§o." };
+  if (!title) return { ok: false, error: "Informe o título do serviço." };
 
   const admin = getAdminSupabaseClient();
   const payload = {
@@ -76,7 +76,7 @@ export async function deleteService(id: string) {
     revalidatePath("/", "layout");
     redirect("/admin/servicos");
   }
-  throw new Error(error?.message || "Erro ao remover serviÃ§o");
+  throw new Error(error?.message || "Erro ao remover serviço");
 }
 
 // ===========================================================================
@@ -90,7 +90,7 @@ async function upsertArticle(formData: FormData, id?: string) {
   const content = String(formData.get("content") ?? "");
   const author = String(formData.get("author") ?? "Bianca Martins").trim();
   const isPublished = formData.get("is_published") === "on";
-  // Imagem no prÃ³prio dado (form hidden atualizado via upload assÃ­ncrono).
+  // Imagem no próprio dado (form hidden atualizado via upload assíncrono).
   const coverImageUrl = String(formData.get("cover_image_url") ?? "").trim();
   // Correção: evita dupla proteção de quebras (\\n virando texto literal).
   const contentClean = String(content).replace(/\\\\r?\\\\n/g, "\n");
@@ -157,7 +157,7 @@ export async function uploadCover(rawFile: File) {
     return null;
   }
   if (rawFile.size > 5 * 1024 * 1024) {
-    throw new Error("A imagem deve ter no mÃ¡ximo 5 MB.");
+    throw new Error("A imagem deve ter no máximo 5 MB.");
   }
 
   const bytes = Buffer.from(await rawFile.arrayBuffer());

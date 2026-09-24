@@ -28,6 +28,7 @@ export const ADMIN_LINKS = [
   { label: "Serviços", href: "/admin/servicos" },
   { label: "Conteúdos", href: "/admin/conteudos" },
   { label: "Mensagens", href: "/admin/mensagens" },
+  { label: "Seções do site", href: "/admin/secoes" },
   { label: "Configurações", href: "/admin/configuracoes" }
 ] as const;
 

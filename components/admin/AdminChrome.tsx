@@ -30,7 +30,7 @@ const NAV_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/configuracoes": Settings
 };
 
-/** Casca visual do painel com navegaÃ§Ã£o lateral responsiva. */
+/** Casca visual do painel com navegação lateral responsiva. */
 export default function AdminChrome({
   children,
   userName
@@ -131,7 +131,7 @@ export default function AdminChrome({
         </div>
       </aside>
 
-      {/* ConteÃºdo */}
+      {/* Conteúdo */}
       <div className="min-w-0 flex-1">
         {/* Barra superior mobile */}
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-navy-800/10 bg-ivory-100/95 px-4 py-3 backdrop-blur lg:hidden">

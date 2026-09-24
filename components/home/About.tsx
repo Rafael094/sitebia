@@ -83,7 +83,7 @@ export default function About() {
           <div className="absolute inset-0 -rotate-1 rounded-md border border-gold-500/40" />
           <div className="relative aspect-[4/5] w-full rotate-1 overflow-hidden rounded-md border border-gold-500/70 bg-navy-800 transition-transform duration-300 hover:rotate-0">
             <Image
-              src="/images/1702302801691.jpg"
+              src="/images/bianca-martins.jpg"
               alt="Retrato profissional de Bianca Martins"
               fill
               priority
