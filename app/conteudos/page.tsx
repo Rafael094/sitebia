@@ -3,13 +3,13 @@ import { Newspaper } from "lucide-react";
 
 import PageHero from "@/components/ui/PageHero";
 import ArticleCard from "@/components/ui/ArticleCard";
-import { ARTICLE_CATEGORIES, SITE } from "@/lib/constants";
+import { ARTICLE_CATEGORIES } from "@/lib/constants";
 import { getPublishedArticles } from "@/lib/queries";
 import { cn } from "@/lib/utils";
-import type { ArticleCategory } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: SITE.title("Conteúdos"),
+  // A marca é acrescentada pelo template do layout raiz — não repetir aqui.
+  title: "Conteúdos",
   description:
     "Artigos, análises e notas sobre transferência de tecnologia, propriedade intelectual e contratos & parcerias."
 };
@@ -84,12 +84,6 @@ export default async function ConteudosPage({ searchParams }: Props) {
               ))}
             </div>
           )}
-
-          <p className="mt-10 text-center text-xs text-navy-400">
-            {articles.length} conteúdo(s) listado(s)
-            {categoria !== "todos" &&
-              ` em “${ARTICLE_CATEGORIES[categoria as ArticleCategory]?.label ?? categoria}”`}
-          </p>
         </div>
       </section>
     </>

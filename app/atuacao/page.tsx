@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Briefcase } from "lucide-react";
 
-import PageHero from "@/components/ui/PageHero";
-import ServiceListItem from "@/components/ui/ServiceListItem";
-import CtaBanner from "@/components/ui/CtaBanner";
-import { SITE } from "@/lib/constants";
+import ServiceGridCard from "@/components/ui/ServiceGridCard";
+import ServicesHeader from "@/components/ui/ServicesHeader";
+import TechNetworkBg from "@/components/ui/TechNetworkBg";
+import AtuacaoCta from "@/components/ui/AtuacaoCta";
 import { getActiveServices } from "@/lib/queries";
 
 export const metadata: Metadata = {
-  title: SITE.title("Áreas de Atuação"),
+  // A marca é acrescentada pelo template do layout raiz — não repetir aqui.
+  title: "Áreas de Atuação",
   description:
     "Conheça todas as áreas de atuação: diagnóstico de PI, estruturação de portfólio, conexão pesquisa-mercado e contratos de transferência de tecnologia."
 };
@@ -19,28 +19,27 @@ export default async function AtuacaoPage() {
   const services = await getActiveServices().catch(() => []);
 
   return (
-    <>
-      <PageHero
-        eyebrow="Atuação"
-        title="Estratégia completa para proteger e transferir tecnologia"
-        description="Cada projeto é endereçado por um especialista que une técnica jurídica e visão de negócio. Escolha a área que mais se aproxima do seu momento."
-        icon={Briefcase}
-      />
+    <section className="relative overflow-hidden bg-navy-900 pb-20 pt-32 sm:pt-36">
+      {/* Textura sutil de rede de conexões */}
+      <TechNetworkBg className="pointer-events-none absolute inset-0 opacity-[0.07]" />
 
-      <section className="bg-ivory-100 py-16">
-        <div className="container-site space-y-6">
+      <div className="container-site relative">
+        <ServicesHeader />
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
           {services.length === 0 && (
-            <p className="rounded-md border border-navy-800/10 bg-white p-6 text-sm text-navy-600">
+            <p className="rounded-xl border border-amber-500/20 bg-navy-800/40 p-6 text-sm text-slate-300 backdrop-blur-md">
               Nenhum serviço ativo no momento. Volte em breve.
             </p>
           )}
           {services.map((service) => (
-            <ServiceListItem key={service.id} service={service} />
+            <ServiceGridCard key={service.id} service={service} />
           ))}
         </div>
-      </section>
+      </div>
 
-      <CtaBanner />
-    </>
+      <AtuacaoCta />
+    </section>
   );
 }
+

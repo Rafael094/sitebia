@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const service = await getServiceBySlug(slug).catch(() => null);
   return {
-    title: service ? SITE.title(service.title) : "Serviço não encontrado",
+    // A marca é acrescentada pelo template do layout raiz — não repetir aqui.
+    title: service ? service.title : "Serviço não encontrado",
     description: service?.summary ?? SITE.description
   };
 }
