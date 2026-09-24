@@ -1,0 +1,109 @@
+name: Supabase Keep-Alive
+
+# O plano gratuito do Supabase pausa projetos após 7 dias SEM atividade.
+# Este workflow faz uma requisição real de LEITURA na API REST a cada 3 dias,
+# mantendo o projeto ativo sem precisar de um app rodando 24/7.
+#
+# Configuração necessária (1x):
+#   GitHub → Settings → Secrets and variables → Actions → New repository secret
+#     NEXT_PUBLIC_SUPABASE_URL      = https://xxxxxxxx.supabase.co
+#     NEXT_PUBLIC_SUPABASE_ANON_KEY = <chave anon (publishable)>
+#
+# Observação: as chaves são as MESMAS do .env.local. A chave anon/publishable é
+# segura por natureza (é exposta no navegador em qualquer app Supabase).
+
+on:
+  schedule:
+    # Formato cron: minuto hora dia-do-mês mês dia-da-semana (sempre em UTC!)
+    # "0 12 */3 * *" = todo dia 1, 4, 7, 10... às 12:00 UTC (09:00 de Brasília).
+    # Ou seja, no pior caso o intervalo entre pings fica em ~4 dias — confortável
+    # dentro da janela de 7 dias do Supabase.
+    - cron: "0 12 */3 * *"
+  # Permite disparar manualmente na aba "Actions" para testar.
+  workflow_dispatch:
+
+# Evita execuções sobrepostas caso um ping demore mais que o intervalo.
+concurrency:
+  group: supabase-keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping Supabase REST API
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Consultar tabela site_settings (mantém o projeto acordado)
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::Secrets NEXT_PUBLIC_SUPABASE_URL e/ou NEXT_PUBLIC_SUPABASE_ANON_KEY não configurados."
+            echo "Cadastre em: Settings > Secrets and variables > Actions > New repository secret"
+            exit 1
+          fi
+
+          # Trava de segurança: a URL deve ser https e terminar em .supabase.co
+          case "$SUPABASE_URL" in
+            https://*.supabase.co) ;;
+            *)
+              echo "::error::NEXT_PUBLIC_SUPABASE_URL inválida: esperado https://<ref>.supabase.co"
+              exit 1
+              ;;
+          esac
+
+          ENDPOINT="${SUPABASE_URL%/}/rest/v1/site_settings?select=id&limit=1"
+          echo "Consultando: ${ENDPOINT%%\?*}..."
+
+          HTTP_CODE=$(curl --silent --show-error \
+            --max-time 60 \
+            --retry 3 --retry-delay 10 --retry-connrefused \
+            --output /tmp/supabase-ping.json \
+            --write-out '%{http_code}' \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "Accept: application/json" \
+            "$ENDPOINT")
+
+          echo "HTTP ${HTTP_CODE}"
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Supabase respondeu HTTP ${HTTP_CODE}."
+            cat /tmp/supabase-ping.json 2>/dev/null || true
+            exit 1
+          fi
+
+          # Confirma que veio JSON (e não uma página HTML de erro).
+          if ! grep -q '^\[' /tmp/supabase-ping.json; then
+            echo "::warning::Resposta inesperada (não parece JSON de lista):"
+            head -c 500 /tmp/supabase-ping.json || true
+          fi
+
+          echo "OK — projeto ativo e respondendo."
+
+          # GITHUB_STEP_SUMMARY existe no Actions; sem ela imprimimos no console
+          # (o ramo evita abortar sob `set -u` e funciona em qualquer SO).
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            SUMMARY="$GITHUB_STEP_SUMMARY"
+          else
+            SUMMARY=""
+          fi
+
+          print_summary() {
+            echo "Resumo da execução"
+            echo ""
+            echo "- Endpoint: \`/rest/v1/site_settings?select=id&limit=1\`"
+            echo "- HTTP: \`${HTTP_CODE}\`"
+            echo "- Status: projeto Supabase acordado ✅"
+            echo "- Data (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
+          }
+
+          if [ -n "$SUMMARY" ]; then
+            print_summary >> "$SUMMARY"
+          else
+            print_summary
+          fi
