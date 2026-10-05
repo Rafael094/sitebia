@@ -19,6 +19,7 @@ export const NAV_LINKS = [
   { label: "Início", href: "/" },
   { label: "Atuação", href: "/atuacao" },
   { label: "Conteúdos", href: "/conteudos" },
+  { label: "International Clients", href: "/international" },
   { label: "Contato", href: "/contato" }
 ] as const;
 
@@ -68,3 +69,6 @@ export const DEFAULT_CONTACT_CHANNELS: SiteContactLinks = {
 
 /** Nome do bucket de capas no Supabase Storage. */
 export const COVER_BUCKET = "article-covers";
+
+/** Nome do bucket de uploads públicos (imagens enviadas pelo painel: Hero etc.). */
+export const UPLOADS_BUCKET = "uploads";

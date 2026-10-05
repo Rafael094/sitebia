@@ -76,6 +76,120 @@ export const DEFAULT_PAGE_CONTENTS: Record<PageSectionKey, PageContent> = {
     title: "Bianca Martins",
     description:
       "Atuação em propriedade intelectual ligada à interface pesquisaâ€“mercado."
+  },
+
+  // ==========================================================================
+  // Landing page internacional — "International Clients" (/international)
+  // Textos em inglês. O botão principal abre o formulário de contato (#contact).
+  // image_url (quando definida) aparece como composição editorial no Hero.
+  // ==========================================================================
+  intl_hero: {
+    section_key: "intl_hero",
+    badge_text: "INTERNATIONAL CLIENTS",
+    title:
+      "Protect your IP. Enter the Brazilian market. Build innovation partnerships.",
+    subtitle:
+      "Strategic legal and innovation support for foreign companies and international law firms navigating intellectual property, technology transfer and innovation opportunities in Brazil.",
+    quote_text:
+      "Based in Brazil. Working across borders.",
+    button_primary_label: "Talk to Bianca",
+    button_primary_url: "#contact",
+    button_secondary_label: "Explore our services",
+    button_secondary_url: "#services",
+    image_url: ""
+  },
+  intl_trust: {
+    section_key: "intl_trust",
+    badge_text: "HOW WE HELP",
+    title: "Three ways we support international clients",
+    description:
+      "A focused practice built around intellectual property, market entry and innovation — delivered by a Brazilian team for clients working across jurisdictions."
+  },
+  intl_services: {
+    section_key: "intl_services",
+    badge_text: "SERVICES",
+    title: "How we can support your business in Brazil",
+    description:
+      "Entering a new market requires more than local knowledge. It requires a strategic understanding of how intellectual property, contracts, regulation and innovation interact."
+  },
+  intl_ip: {
+    section_key: "intl_ip",
+    badge_text: "INTELLECTUAL PROPERTY",
+    title: "Protect your intellectual property in Brazil",
+    description:
+      "Brazil is one of the world's major markets. Protecting your brand, technology and other intellectual assets locally should be part of your market-entry strategy.",
+    button_primary_label: "Protect your IP in Brazil",
+    button_primary_url: "#contact"
+  },
+  intl_market_entry: {
+    section_key: "intl_market_entry",
+    badge_text: "BRAZIL MARKET ENTRY",
+    title: "Entering the Brazilian market?",
+    description:
+      "Brazil offers significant commercial and innovation opportunities, but navigating its legal, intellectual property and regulatory environment requires local expertise.",
+    button_primary_label: "Discuss your Brazil market entry",
+    button_primary_url: "#contact"
+  },
+  intl_innovation: {
+    section_key: "intl_innovation",
+    badge_text: "INNOVATION & TECHNOLOGY TRANSFER",
+    title: "Build innovation partnerships in Brazil",
+    description:
+      "Brazil has a diverse innovation ecosystem connecting companies, universities, research institutions, startups and technology-based organizations. We support companies seeking to establish or structure these relationships.",
+    button_primary_label: "Discuss an innovation project",
+    button_primary_url: "#contact"
+  },
+  intl_law_firms: {
+    section_key: "intl_law_firms",
+    badge_text: "FOR INTERNATIONAL LAW FIRMS",
+    title: "Looking for Brazilian IP support for your clients?",
+    description:
+      "We work with international law firms and intellectual property professionals that need reliable Brazilian support for their clients.",
+    subtitle: "A reliable Brazilian partner for your international practice.",
+    quote_text:
+      "Confidentiality, responsiveness and clear communication are central to our international work.",
+    button_primary_label: "Discuss a partnership",
+    button_primary_url: "#contact"
+  },
+  intl_why: {
+    section_key: "intl_why",
+    badge_text: "WHY BIANCA",
+    title: "Why work with Bianca?",
+    description:
+      "A single point of contact combining Brazilian legal expertise, business sense and cross-border communication."
+  },
+  intl_process: {
+    section_key: "intl_process",
+    badge_text: "HOW WE WORK",
+    title: "A clear process for international clients",
+    description:
+      "A structured path from first conversation to implementation — you always know where you are and what comes next."
+  },
+  intl_about: {
+    section_key: "intl_about",
+    badge_text: "ABOUT",
+    title: "Brazilian expertise. International perspective.",
+    description:
+      "Bianca Martins is a Brazilian lawyer and consultant focused on Intellectual Property, Innovation and Technology Transfer. Her practice sits at the intersection of legal strategy, innovation ecosystems, intellectual property and technology partnerships. She supports companies and organizations dealing with the Brazilian market, helping them protect intellectual assets, structure strategic relationships and navigate innovation opportunities.",
+    image_url: "/images/bianca-martins.jpg"
+  },
+  intl_faq: {
+    section_key: "intl_faq",
+    badge_text: "FAQ",
+    title: "Questions from international clients",
+    description:
+      "Common questions about protecting and commercializing intellectual property and building innovation partnerships in Brazil."
+  },
+  intl_cta: {
+    section_key: "intl_cta",
+    badge_text: "NEXT STEP",
+    title: "Planning to enter or expand in Brazil?",
+    description:
+      "Let's discuss your intellectual property, market-entry or innovation needs.",
+    button_primary_label: "Talk to Bianca",
+    button_primary_url: "#contact",
+    button_secondary_label: "Send an inquiry",
+    button_secondary_url: "#contact"
   }
 };
 
@@ -96,7 +210,7 @@ export const FIELD_LABELS: Record<keyof PageContent, string> = {
   button_secondary_url: "Botão 2 (URL)",
   badge_extra_title: "Selo â€” número",
   badge_extra_sub: "Selo â€” legenda",
-  image_url: "Imagem (URL)",
+  image_url: "Imagem (enviar arquivo)",
   updated_at: "Atualizado em"
 };
 
@@ -144,6 +258,68 @@ export const SECTION_META: Record<
     label: "Cabeçalho /contato",
     group: "Páginas internas",
     hint: "Hero da página /contato."
+  },
+
+  // --- Landing page internacional (/international) ---
+  intl_hero: {
+    label: "Hero — International",
+    group: "International",
+    hint: "Destaque principal (headline, subheadline e botões)."
+  },
+  intl_trust: {
+    label: "Trust bar — International",
+    group: "International",
+    hint: "Faixa de posicionamento com três pilares."
+  },
+  intl_services: {
+    label: "Services overview — International",
+    group: "International",
+    hint: "Cabeçalho da grade de serviços (4 cards)."
+  },
+  intl_ip: {
+    label: "IP Protection — International",
+    group: "International",
+    hint: "Seção de propriedade intelectual e seu CTA."
+  },
+  intl_market_entry: {
+    label: "Brazil Market Entry — International",
+    group: "International",
+    hint: "Seção de entrada no mercado brasileiro e seu CTA."
+  },
+  intl_innovation: {
+    label: "Innovation & Tech Transfer — International",
+    group: "International",
+    hint: "Seção de inovação/transferência de tecnologia e seu CTA."
+  },
+  intl_law_firms: {
+    label: "International Law Firms — International",
+    group: "International",
+    hint: "Seção de conversão para escritórios estrangeiros."
+  },
+  intl_why: {
+    label: "Why Bianca — International",
+    group: "International",
+    hint: "Quatro pilares de diferenciação."
+  },
+  intl_process: {
+    label: "How we work — International",
+    group: "International",
+    hint: "Processo em quatro etapas."
+  },
+  intl_about: {
+    label: "About — International",
+    group: "International",
+    hint: "Bloco sobre Bianca (texto + foto)."
+  },
+  intl_faq: {
+    label: "FAQ — International",
+    group: "International",
+    hint: "Título e descrição do acordeão de perguntas."
+  },
+  intl_cta: {
+    label: "CTA final — International",
+    group: "International",
+    hint: "Chamada final com botões para o contato."
   }
 };
 
@@ -155,7 +331,20 @@ export const PAGE_SECTION_KEYS: PageSectionKey[] = [
   "home_cta",
   "page_services_header",
   "page_articles_header",
-  "page_contact_header"
+  "page_contact_header",
+  // International landing page
+  "intl_hero",
+  "intl_trust",
+  "intl_services",
+  "intl_ip",
+  "intl_market_entry",
+  "intl_innovation",
+  "intl_law_firms",
+  "intl_why",
+  "intl_process",
+  "intl_about",
+  "intl_faq",
+  "intl_cta"
 ];
 
 /** Fallback válido de conteúdo de uma chave (o site nunca abre em branco). */

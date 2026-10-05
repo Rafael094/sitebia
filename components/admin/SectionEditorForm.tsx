@@ -29,6 +29,19 @@ export default function SectionEditorForm({
     | { kind: "error"; message: string }
     | { kind: "success" }
   >({ kind: "idle" });
+  // Pré-visualização da imagem do Hero antes do envio (input#IMAGE_FILE -> img#imagePreview).
+  const [previewSrc, setPreviewSrc] = useState<string>(content.image_url ?? "");
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result;
+      if (typeof result === "string") setPreviewSrc(result);
+    };
+    reader.readAsDataURL(file);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -151,8 +164,35 @@ export default function SectionEditorForm({
 
       {content.image_url !== undefined && (
         <div>
-          <label className="label-field">Imagem (URL)</label>
-          <input name="image_url" defaultValue={content.image_url ?? ""} className="input-field" placeholder="/images/… ou https://…" />
+          <label className="label-field" htmlFor="IMAGE_FILE">
+            Imagem (enviar arquivo)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            name="IMAGE_FILE"
+            id="IMAGE_FILE"
+            onChange={handleImageChange}
+            className="input-field file:mr-3 file:rounded-sm file:border-0 file:bg-navy-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+          />
+          <p className="mt-1 text-[11px] text-navy-400">
+            {content.image_url
+              ? "Imagem atual será mantida se nenhum arquivo for escolhido."
+              : "Nenhuma imagem definida ainda."}
+          </p>
+
+          <div id="preview" style={{ marginTop: 10 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              id="imagePreview"
+              src={previewSrc}
+              alt="Preview"
+              style={{
+                maxWidth: 200,
+                display: previewSrc ? "block" : "none"
+              }}
+            />
+          </div>
         </div>
       )}
 

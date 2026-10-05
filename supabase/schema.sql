@@ -235,9 +235,38 @@ create policy "article_covers_public_read"
   on storage.objects for select
   using (bucket_id = 'article-covers');
 
+-- ================================================================
+-- 8. STORAGE — Bucket de uploads do painel (imagem do Hero etc.)
+-- Publico para leitura; escrita apenas via service_role (Server Actions).
+-- ================================================================
+insert into storage.buckets (id, name, public)
+values ('uploads', 'uploads', true)
+on conflict (id) do nothing;
+
+drop policy if exists "uploads_auth_upload" on storage.objects;
+create policy "uploads_auth_upload"
+  on storage.objects for insert
+  with check (bucket_id = 'uploads' and auth.role() = 'authenticated');
+
+drop policy if exists "uploads_auth_update" on storage.objects;
+create policy "uploads_auth_update"
+  on storage.objects for update
+  using (bucket_id = 'uploads' and auth.role() = 'authenticated');
+
+drop policy if exists "uploads_auth_delete" on storage.objects;
+create policy "uploads_auth_delete"
+  on storage.objects for delete
+  using (bucket_id = 'uploads' and auth.role() = 'authenticated');
+
+-- Leitura publica das imagens enviadas pelo painel
+drop policy if exists "uploads_public_read" on storage.objects;
+create policy "uploads_public_read"
+  on storage.objects for select
+  using (bucket_id = 'uploads');
+
 
 -- ================================================================
--- 8. SEED — dados iniciais ilustrativos (executar apos as tabelas)
+-- 9. SEED — dados iniciais ilustrativos (executar apos as tabelas)
 -- ================================================================
 
 insert into public.services
@@ -288,6 +317,96 @@ values
     4
   )
 on conflict (slug) do nothing;
+
+-- ================================================================
+-- 10. LANDING PAGE INTERNACIONAL (/international)
+-- Seeds dos textos da página em inglês. O bucket de uploads e os
+-- conteúdos são editáveis pelo painel (grupo "International").
+-- ================================================================
+insert into public.page_contents
+  (section_key, badge_text, title, subtitle, description, quote_text,
+   button_primary_label, button_primary_url,
+   button_secondary_label, button_secondary_url, image_url)
+values
+  (
+    'intl_hero', 'INTERNATIONAL CLIENTS',
+    E'Protect your IP.\nEnter the Brazilian market.\nBuild innovation partnerships.',
+    'Strategic legal and innovation support for foreign companies and international law firms navigating intellectual property, technology transfer and innovation opportunities in Brazil.',
+    '',
+    'Based in Brazil. Working across borders.',
+    'Talk to Bianca', '#contact',
+    'Explore our services', '#services',
+    ''
+  ),
+  (
+    'intl_trust', 'HOW WE HELP',
+    'Three ways we support international clients', '', 
+    'A focused practice built around intellectual property, market entry and innovation — delivered by a Brazilian team for clients working across jurisdictions.',
+    '', '', '', '', '', ''
+  ),
+  (
+    'intl_services', 'SERVICES',
+    'How we can support your business in Brazil', '',
+    'Entering a new market requires more than local knowledge. It requires a strategic understanding of how intellectual property, contracts, regulation and innovation interact.',
+    '', '', '', '', '', ''
+  ),
+  (
+    'intl_ip', 'INTELLECTUAL PROPERTY',
+    'Protect your intellectual property in Brazil', '',
+    'Brazil is one of the world''s major markets. Protecting your brand, technology and other intellectual assets locally should be part of your market-entry strategy.',
+    '', 'Protect your IP in Brazil', '#contact', '', '', ''
+  ),
+  (
+    'intl_market_entry', 'BRAZIL MARKET ENTRY',
+    'Entering the Brazilian market?', '',
+    'Brazil offers significant commercial and innovation opportunities, but navigating its legal, intellectual property and regulatory environment requires local expertise.',
+    '', 'Discuss your Brazil market entry', '#contact', '', '', ''
+  ),
+  (
+    'intl_innovation', 'INNOVATION & TECHNOLOGY TRANSFER',
+    'Build innovation partnerships in Brazil', '',
+    'Brazil has a diverse innovation ecosystem connecting companies, universities, research institutions, startups and technology-based organizations. We support companies seeking to establish or structure these relationships.',
+    '', 'Discuss an innovation project', '#contact', '', '', ''
+  ),
+  (
+    'intl_law_firms', 'FOR INTERNATIONAL LAW FIRMS',
+    'Looking for Brazilian IP support for your clients?',
+    'A reliable Brazilian partner for your international practice.',
+    'We work with international law firms and intellectual property professionals that need reliable Brazilian support for their clients.',
+    'Confidentiality, responsiveness and clear communication are central to our international work.',
+    'Discuss a partnership', '#contact', '', '', ''
+  ),
+  (
+    'intl_why', 'WHY BIANCA',
+    'Why work with Bianca?', '',
+    'A single point of contact combining Brazilian legal expertise, business sense and cross-border communication.',
+    '', '', '', '', '', ''
+  ),
+  (
+    'intl_process', 'HOW WE WORK',
+    'A clear process for international clients', '',
+    'A structured path from first conversation to implementation — you always know where you are and what comes next.',
+    '', '', '', '', '', ''
+  ),
+  (
+    'intl_about', 'ABOUT',
+    'Brazilian expertise. International perspective.', '',
+    'Bianca Martins is a Brazilian lawyer and consultant focused on Intellectual Property, Innovation and Technology Transfer. Her practice sits at the intersection of legal strategy, innovation ecosystems, intellectual property and technology partnerships. She supports companies and organizations dealing with the Brazilian market, helping them protect intellectual assets, structure strategic relationships and navigate innovation opportunities.',
+    '', '', '', '', '', '/images/bianca-martins.jpg'
+  ),
+  (
+    'intl_faq', 'FAQ',
+    'Questions from international clients', '',
+    'Common questions about protecting and commercializing intellectual property and building innovation partnerships in Brazil.',
+    '', '', '', '', '', ''
+  ),
+  (
+    'intl_cta', 'NEXT STEP',
+    'Planning to enter or expand in Brazil?', '',
+    'Let''s discuss your intellectual property, market-entry or innovation needs.',
+    '', 'Talk to Bianca', '#contact', 'Send an inquiry', '#contact', ''
+  )
+on conflict (section_key) do nothing;
 
 -- Artigos de exemplo
 insert into public.articles

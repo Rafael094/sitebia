@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   robots: { index: false }
 };
 
-/** Agrupa seções (Home / Páginas internas / Geral). */
-const GROUPS = ["Home", "Páginas internas", "Geral"];
+/** Agrupa seções (Home / Páginas internas / International / Geral). */
+const GROUPS = ["Home", "Páginas internas", "International", "Geral"];
 
 export default async function AdminSecoesPage() {
   const sections = await listAdminSections().catch(() => []);

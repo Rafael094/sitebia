@@ -70,6 +70,10 @@ export default function Header() {
   if (isAdmin) return null;
 
   const isNavy = band === "navy";
+  // Landing internacional: CTA do header aponta para o formulário da própria página.
+  const isInternational = pathname === "/international";
+  const ctaHref = isInternational ? "#contact" : "/contato";
+  const ctaLabel = isInternational ? "Talk to Bianca" : "Falar comigo";
 
   return (
     <header
@@ -115,8 +119,8 @@ export default function Header() {
               </Link>
             );
           })}
-          <Link href="/contato" className="btn-gold !py-2.5 !px-5">
-            Falar comigo
+          <Link href={ctaHref} className="btn-gold !py-2.5 !px-5">
+            {ctaLabel}
           </Link>
         </nav>
 
@@ -172,8 +176,8 @@ export default function Header() {
                 );
               })}
               <li className="mt-2">
-                <Link href="/contato" className="btn-gold w-full">
-                  Falar comigo
+                <Link href={ctaHref} className="btn-gold w-full">
+                  {ctaLabel}
                 </Link>
               </li>
             </ul>

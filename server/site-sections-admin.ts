@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 
 import { getAdminSupabaseClient } from "@/lib/supabase/admin";
+import { UPLOADS_BUCKET } from "@/lib/constants";
 import {
   PAGE_SECTION_KEYS,
   RICH_FIELDS,
   mergePageContentRow
 } from "@/lib/page-content";
 import { sanitizeRichHtml } from "@/lib/rich-html";
+import { randomId } from "@/lib/utils";
 import type { PageContent, PageSectionKey } from "@/lib/types";
 
 /** Campos textuais simples (gravados uma linha única, sem quebra de parágrafo). */
@@ -52,6 +54,27 @@ export async function listAdminSections(): Promise<
 
 export type SectionSaveResult = { ok: true } | { ok: false; error: string };
 
+/**
+ * Envia uma imagem do painel para a pasta pública de uploads (Supabase Storage)
+ * e devolve a URL pública relativa/absoluta que será gravada em image_url.
+ */
+async function uploadSectionImage(rawFile: File): Promise<string> {
+  const bytes = Buffer.from(await rawFile.arrayBuffer());
+  const ext = (rawFile.name.split(".").pop() || "png").toLowerCase();
+  const folder = "sections";
+  const fileName = `${Date.now()}-${randomId(8)}.${ext}`;
+
+  const admin = getAdminSupabaseClient();
+  const { error } = await admin.storage
+    .from(UPLOADS_BUCKET)
+    .upload(`${folder}/${fileName}`, bytes, { contentType: rawFile.type });
+
+  if (error) throw new Error(error.message);
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return `${base}/storage/v1/object/public/${UPLOADS_BUCKET}/${folder}/${fileName}`;
+}
+
 /** Grava (upsert pelo section_key) o conteúdo editado de uma seção. */
 export async function saveSectionContentAction(
   formData: FormData
@@ -77,6 +100,27 @@ export async function saveSectionContentAction(
     const name = f as string;
     // keeps literal newlines out of single-line fields
     plainValues[f] = textOf(name);
+  }
+
+  // Arquivo de imagem do Hero (input type="file" name="IMAGE_FILE"):
+  // quando enviado, substitui a antiga string de URL estática pelo caminho
+  // salvo na pasta pública de uploads. Sem arquivo, mantém o valor atual.
+  const imageFile = formData.get("IMAGE_FILE");
+  if (imageFile instanceof File && imageFile.size > 0) {
+    if (imageFile.size > 5 * 1024 * 1024) {
+      return { ok: false, error: "A imagem deve ter no máximo 5 MB." };
+    }
+    if (!imageFile.type.startsWith("image/")) {
+      return { ok: false, error: "Envie um arquivo de imagem válido." };
+    }
+    try {
+      plainValues.image_url = await uploadSectionImage(imageFile);
+    } catch (e) {
+      return {
+        ok: false,
+        error: e instanceof Error ? e.message : "Falha ao enviar a imagem."
+      };
+    }
   }
 
   const payload = {

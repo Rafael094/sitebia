@@ -33,6 +33,19 @@ function previewLinks(key: PageSectionKey) {
       return [{ href: "/conteudos", label: "/conteudos" }];
     case "page_contact_header":
       return [{ href: "/contato", label: "/contato" }];
+    case "intl_hero":
+    case "intl_trust":
+    case "intl_services":
+    case "intl_ip":
+    case "intl_market_entry":
+    case "intl_innovation":
+    case "intl_law_firms":
+    case "intl_why":
+    case "intl_process":
+    case "intl_about":
+    case "intl_faq":
+    case "intl_cta":
+      return [{ href: "/international", label: "/international" }];
     default:
       return [];
   }

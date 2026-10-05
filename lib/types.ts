@@ -101,7 +101,20 @@ export type PageSectionKey =
   | "page_services_header"
   | "page_articles_header"
   | "page_contact_header"
-  | "home_about";
+  | "home_about"
+  // --- Landing page internacional ("International Clients") ---
+  | "intl_hero"
+  | "intl_trust"
+  | "intl_services"
+  | "intl_ip"
+  | "intl_market_entry"
+  | "intl_innovation"
+  | "intl_law_firms"
+  | "intl_why"
+  | "intl_process"
+  | "intl_about"
+  | "intl_faq"
+  | "intl_cta";
 
 /** Campos editáveis de cada seção — espelham as colunas da tabela page_contents. */
 export interface PageContent {

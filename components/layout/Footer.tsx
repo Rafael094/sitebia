@@ -16,7 +16,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-navy-900 text-ivory-100" data-header-theme="dark">
-      <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {/* Marca */}
         <div className="sm:col-span-2 lg:col-span-1">
           {/* Logo reverso (fundo escuro) */}
@@ -58,6 +58,45 @@ export default function Footer() {
             className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-gold-400 hover:text-gold-300"
           >
             Ver todos os serviços <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {/* International Clients */}
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-gold-400">
+            International Clients
+          </h3>
+          <ul className="mt-4 space-y-2.5 text-sm">
+            <li>
+              <Link
+                href="/international"
+                className="text-ivory-200/80 transition-colors hover:text-white"
+              >
+                Brazilian IP
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/international#innovation"
+                className="text-ivory-200/80 transition-colors hover:text-white"
+              >
+                Innovation &amp; Technology Transfer
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/international#market-entry"
+                className="text-ivory-200/80 transition-colors hover:text-white"
+              >
+                Brazil Market Entry
+              </Link>
+            </li>
+          </ul>
+          <Link
+            href="/international"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-gold-400 hover:text-gold-300"
+          >
+            International Clients <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
 
