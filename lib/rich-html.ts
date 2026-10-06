@@ -118,3 +118,107 @@ export function escapeHtml(input: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+/** Detecta se o texto já contém blocos HTML do editor (p/ não reconverter). */
+export function looksLikeHtml(input: string): boolean {
+  return /<(p|div|h[1-6]|ul|ol|li|blockquote|figure|table|img|hr)\b/i.test(String(input ?? ""));
+}
+
+/**
+ * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ * títulos, listas com marcadores ou numeradas, citações, negrito, itálico,
+ * código inline, links, imagens, linha horizontal e parágrafos. Se o texto já
+ * for HTML, devolve-o inalterado (evita dupla conversão).
+ */
+export function markdownToHtml(input: string): string {
+  const src = String(input ?? "").replace(/\r\n?/g, "\n").trim();
+  if (!src) return "";
+  if (looksLikeHtml(src)) return src;
+
+  const inline = (t: string): string => {
+    let out = escapeHtml(t);
+    // Código inline primeiro (protege o conteúdo interno).
+    out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+    // Imagens antes de links (mesma sintaxe, com "!").
+    out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1" />');
+    out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>');
+    out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    out = out.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+    out = out.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
+    out = out.replace(/(^|[^_])_([^_]+)_/g, "$1<em>$2</em>");
+    return out;
+  };
+
+  const lines = src.split("\n");
+  const blocks: string[] = [];
+  let list: { type: "ul" | "ol"; items: string[] } | null = null;
+  let para: string[] = [];
+
+  const flushPara = () => {
+    if (para.length) {
+      blocks.push(`<p>${inline(para.join(" "))}</p>`);
+      para = [];
+    }
+  };
+  const flushList = () => {
+    if (list) {
+      const items = list.items.map((i) => `<li>${inline(i)}</li>`).join("");
+      blocks.push(`<${list.type}>${items}</${list.type}>`);
+      list = null;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) {
+      flushPara();
+      flushList();
+      continue;
+    }
+    let m: RegExpMatchArray | null;
+    if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+      flushPara();
+      flushList();
+      const level = Math.min(m[1].length + 1, 6); // # vira h2 (título já existe)
+      blocks.push(`<h${level}>${inline(m[2])}</h${level}>`);
+      continue;
+    }
+    if (/^(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) {
+      flushPara();
+      flushList();
+      blocks.push("<hr />");
+      continue;
+    }
+    if ((m = line.match(/^>\s?(.*)$/))) {
+      flushPara();
+      flushList();
+      blocks.push(`<blockquote><p>${inline(m[1])}</p></blockquote>`);
+      continue;
+    }
+    if ((m = line.match(/^\s*[-*+]\s+(.*)$/))) {
+      flushPara();
+      if (list?.type !== "ul") {
+        flushList();
+        list = { type: "ul", items: [] };
+      }
+      list.items.push(m[1]);
+      continue;
+    }
+    if ((m = line.match(/^\s*\d+\.\s+(.*)$/))) {
+      flushPara();
+      if (list?.type !== "ol") {
+        flushList();
+        list = { type: "ol", items: [] };
+      }
+      list.items.push(m[1]);
+      continue;
+    }
+    flushList();
+    para.push(line.trim());
+  }
+  flushPara();
+  flushList();
+
+  return blocks.join("\n");
+}

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 
 import SeoFields from "@/components/admin/SeoFields";
+import RichTextField from "@/components/admin/RichTextField";
 import { createService, updateServiceAction } from "@/server/admin";
 import { normalizeSeoMetadata } from "@/lib/seo-types";
+import { markdownToHtml } from "@/lib/rich-html";
 import type { Service } from "@/lib/types";
 
 /**
@@ -28,7 +30,9 @@ export default function ServiceForm({
   // Espelhos do conteúdo atual para alimentar o gerador de SEO (DeepSeek).
   const [title, setTitle] = useState(service?.title ?? "");
   const [summary, setSummary] = useState(service?.summary ?? "");
-  const [description, setDescription] = useState(service?.description ?? "");
+  const [description, setDescription] = useState(() =>
+    markdownToHtml(service?.description ?? "")
+  );
   const [slug, setSlug] = useState(service?.slug ?? "");
 
   async function onSubmit(e: React.FormEvent) {
@@ -85,10 +89,14 @@ export default function ServiceForm({
             value={summary} onChange={(e) => setSummary(e.target.value)} />
         </div>
         <div className="md:col-span-2">
-          <label htmlFor="description" className="label-field">Descrição detalhada (aceita Markdown)</label>
-          <textarea id="description" name="description" rows={8} className="input-field font-mono text-sm"
-            placeholder="# Visão geral&#10;&#10;Texto de apoio…"
-            value={description} onChange={(e) => setDescription(e.target.value)} />
+          <RichTextField
+            name="description"
+            label="Descrição detalhada"
+            value={description}
+            onChange={setDescription}
+            hint="Editor de texto rico: títulos, negrito, listas e citações são preservados."
+            placeholder="Escreva a descrição detalhada…"
+          />
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, Target, Users } from "lucide-react";
 
-import RichText from "@/components/ui/RichText";
+import HtmlContent from "@/components/ui/HtmlContent";
 import CtaBanner from "@/components/ui/CtaBanner";
 import ServiceListItem from "@/components/ui/ServiceListItem";
 import ServiceIcon from "@/components/icons/ServiceIcon";
@@ -87,7 +87,7 @@ export default async function ServiceDetailPage({ params }: Props) {
       <section data-header-theme="light" className="bg-ivory-100 py-16">
         <div className="container-site grid gap-12 lg:grid-cols-[1fr_360px]">
           <article>
-            <RichText content={service.description} />
+            <HtmlContent content={service.description} />
             <div className="mt-10 flex flex-wrap gap-3">
               <Link href="/contato" className="btn-gold">
                 Agendar diagnóstico

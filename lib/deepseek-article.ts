@@ -23,6 +23,7 @@ import {
   keywordsPtBrToArray,
   normalizeKeywordsPtBr
 } from "@/lib/ptbr";
+import { markdownToHtml, sanitizeRichHtml } from "@/lib/rich-html";
 import { slugify } from "@/lib/utils";
 import type { ArticleCategory } from "@/lib/types";
 
@@ -33,31 +34,39 @@ const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
 /** Instrução fixa: o "redator jurídico + SEO" do projeto. */
 const SYSTEM_PROMPT = `Você é redator sênior especializado em Propriedade Intelectual (PI), patentes, inovação e Transferência de Tecnologia, escrevendo para a consultoria de Bianca Martins (Brasil).
 
-Sua tarefa: escolher um TEMA ATUAL E RELEVANTE do nicho e redigir um artigo completo, original, técnico e acessível.
+Sua tarefa: escolher um TEMA ATUAL E RELEVANTE do nicho e redigir um artigo completo, original, técnico e acessível, seguindo rigorosamente as normas de escrita e formatação da ABNT adaptadas para a web.
 
 IDIOMA (REGRA ABSOLUTA):
 - Escreva TODO o conteúdo estritamente em PORTUGUÊS DO BRASIL (pt-BR): títulos, resumo, corpo, metadados de SEO e o prompt da imagem.
 - NUNCA responda em inglês ou em qualquer outro idioma — nem em trechos, rótulos ou títulos de seção.
 - Use ortografia e acentuação corretas do pt-BR. Mantenha termos técnicos consagrados (ex.: "know-how", "software", "NDA", "royalties", "due diligence") quando forem de uso corrente no mercado brasileiro.
-- Tom profissional, técnico, claro e confiável, adequado ao mercado brasileiro de Propriedade Intelectual e Transferência de Tecnologia (sem sensacionalismo).
 
-Regras de redação:
-- Estrutura obrigatória em Markdown: uma introdução (sem título), depois seções com "## " (H2) e subseções com "### " (H3), e uma conclusão ("## Conclusão").
-- 3 a 5 seções H2; pelo menos uma com subtítulos H3. De 700 a 1200 palavras.
-- Parágrafos curtos, listas quando ajudar. NÃO repita o título dentro do corpo.
-- NÃO invente leis, números, prazos, valores ou estatísticas específicas que você não tenha certeza. Prefira princípios gerais e boas práticas.
-- SEO interno: inclua naturalmente as palavras-chave do nicho (propriedade intelectual, patente, transferência de tecnologia, inovação, licenciamento etc.), use H2/H3 descritivos e escreva uma introdução que responda à intenção de busca.
+FORMATO DA SAÍDA (REGRA ABSOLUTA) — HTML SEMÂNTICO, NÃO MARKDOWN:
+- Devolva o campo "content" como HTML LIMPO e SEMÂNTICO, pronto para o CKEditor 5 renderizar e editar visualmente.
+- Use EXCLUSIVAMENTE estas tags: <p>, <h2>, <h3>, <strong>, <em>, <ul>, <ol>, <li>, <blockquote>. Opcionalmente <a href="..."> para referências.
+- NUNCA use Markdown (nada de "#", "##", "**", "- ", "* ", "1. ") nem quebras de linha (\n) para separar blocos: cada bloco é um <p> e cada seção é um <h2>/<h3>.
+- NUNCA use <h1> (o título é campo separado), <div>, <span>, classes, ids ou estilos inline (style="...").
+- NÃO envolva todo o HTML em uma única tag pai; devolva os blocos em sequência.
+
+NORMAS DE ESCRITA (ABNT — NBR 6022/6028/10520/14724, adaptadas à web):
+- LINGUAGEM FORMAL E IMPESSOAL: empregue a norma culta da língua portuguesa, em registro técnico, acadêmico-profissional e impessoal. Use construções impessoais e a 3ª pessoa (ex.: "observa-se", "é necessário", "cabe destacar"). NUNCA use 1ª pessoa ("eu", "nós", "acho", "nossa") nem linguagem coloquial, gírias, superlativos vazios, emojis ou perguntas retóricas.
+- ESTRUTURAÇÃO LÓGICA OBRIGATÓRIA: (a) introdução contextualizada em <p> (aborda o problema e a relevância, sem repetir o título e sem cabeçalho próprio); (b) desenvolvimento fundamentado com 3 a 5 seções em <h2> e, em pelo menos uma, subseções em <h3>; (c) conclusão clara iniciada por <h2>Conclusão</h2>, retomando as ideias centrais sem temas novos.
+- PROGRESSÃO E COESÃO: encadeie as ideias com conectivos formais; use <ul>/<ol> e <li> para enumerações (requisitos, etapas, ativos) quando melhorar a clareza. Parágrafos concisos (2 a 5 períodos).
+- CITAÇÕES E REFERÊNCIAS (ABNT NBR 10520): cite a legislação de forma completa na 1ª ocorrência (ex.: "Lei nº 9.279, de 14 de maio de 1996" ou "Lei nº 9.279/1996"); cite órgãos pelo nome e sigla entre parênteses (ex.: "Instituto Nacional da Propriedade Industrial (INPI)"); cite normativas/tratados pelo nome. Para citações no corpo, use o sistema autor-data ABNT (AUTOR, ano).
+- RIGOR E VERACIDADE: NÃO invente leis, artigos, prazos, valores, estatísticas, datas ou citações incertas. Sem certeza de um dado, prefira princípios gerais, boas práticas e a menção ao órgão/norma competente sem números inventados.
+
+SEO INTERNO: inclua naturalmente as palavras-chave do nicho (propriedade intelectual, patente, transferência de tecnologia, inovação, licenciamento), use <h2>/<h3> descritivos e escreva a introdução respondendo à intenção de busca. NÃO repita o título no corpo.
 
 Regras de SEO (metadados):
 - seo.meta_title: no MÁXIMO ${SEO_LIMITS.title} caracteres, palavra-chave principal no início, sem emojis/CAPS/aspas.
 - seo.meta_description: no MÁXIMO ${SEO_LIMITS.description} caracteres, persuasiva, com chamada à ação implícita.
 - seo.meta_keywords: 4 a ${SEO_LIMITS.keywords} termos separados por vírgula, minúsculos, com long tail.
 - seo.og_title / seo.og_description: versões para redes sociais.
-- image_prompt: descrição EM PORTUGUÊS DO BRASIL (1 a 2 frases) para gerar uma capa profissional e abstrata sobre o tema. Se houver qualquer texto na imagem, ele deve estar em pt-BR. Sem logos, estilo corporativo/jurídico/tecnológico, tons sóbrios (azul-marinho e dourado).
+- image_prompt: descrição EM PORTUGUÊS DO BRASIL (1 a 2 frases) para gerar uma capa profissional e abstrata sobre o tema. Texto na imagem, se houver, em pt-BR. Sem logos, estilo corporativo/jurídico/tecnológico, tons sóbrios (azul-marinho e dourado).
 - category: um destes valores exatos: ${ARTICLE_CATEGORY_LIST.map((c) => `"${c.value}"`).join(", ")}.
 
-Responda APENAS com um JSON válido (sem texto antes/depois):
-{"title":"...","summary":"...","category":"...","content":"## ...\\n...","seo":{"meta_title":"...","meta_description":"...","meta_keywords":"...","og_title":"...","og_description":"..."},"image_prompt":"..."}`;
+Responda APENAS com um JSON válido (sem texto antes/depois). O campo "content" deve conter o HTML semântico completo:
+{\"title\":\"...\",\"summary\":\"...\",\"category\":\"...\",\"content\":\"<p>...</p><h2>...</h2><p>...</p><h3>...</h3><ul><li>...</li></ul><h2>Conclusão</h2><p>...</p>\",\"seo\":{\"meta_title\":\"...\",\"meta_description\":\"...\",\"meta_keywords\":\"...\",\"og_title\":\"...\",\"og_description\":\"...\"},\"image_prompt\":\"...\"}`;
 
 /** Entrada do gerador: um rumo opcional para o tema. */
 export interface ArticleGenInput {
@@ -75,7 +84,7 @@ export interface ArticleDraft {
   slug: string;
   category: ArticleCategory;
   summary: string;
-  /** Corpo em Markdown. */
+  /** Corpo em HTML semântico (ABNT), pronto para o CKEditor 5. */
   content: string;
   meta_description: string;
   tags: string[];
@@ -92,6 +101,26 @@ export interface ArticleGenResult {
 }
 
 const DEFAULT_CATEGORY: ArticleCategory = "propriedade-intelectual";
+/**
+ * Normaliza o corpo gerado pela IA para HTML semântico seguro (CKEditor 5).
+ * Degrada com elegância: se a IA devolver Markdown por engano, converte para
+ * HTML; em seguida aplica a allowlist de sanitização do projeto (remove
+ * scripts/estilos e tags não permitidas), garantindo HTML limpo para edição
+ * visual e exibição no site.
+ */
+function ensureAbntHtml(input: string): string {
+  const raw = String(input ?? "").trim();
+  if (!raw) return "";
+  const html = markdownToHtml(raw);
+  return sanitizeRichHtml(html);
+}
+
+/** Garante que o corpo tenha pelo menos um parágrafo (evita conteúdo vazio). */
+function wrapIfPlain(html: string): string {
+  const src = String(html ?? "").trim();
+  if (!src) return "";
+  return /<(p|h2|h3|ul|ol|blockquote)\b/i.test(src) ? src : `<p>${src}</p>`;
+}
 
 /** Normaliza a categoria devolvida pela IA para um valor válido do enum. */
 function coerceCategory(value: unknown, fallback: ArticleCategory): ArticleCategory {
@@ -117,26 +146,20 @@ export function heuristicArticle(input: ArticleGenInput): ArticleDraft {
 
   const title = clampText(topic, SEO_LIMITS.title);
   const content = [
-    `Este artigo apresenta uma visão prática sobre **${topic}**, no contexto de ${catLabel}. O objetivo é orientar decisões com segurança jurídica e estratégia de mercado.`,
-    "",
-    `## Por que ${topic} importa`,
-    "",
-    `Compreender ${topic} é essencial para transformar conhecimento em valor. Empresas, universidades e pesquisadores precisam de processos claros para proteger ativos e negociar contratos.`,
-    "",
-    "### Pontos de atenção",
-    "",
-    "- Identificação e proteção adequada dos ativos intangíveis;",
-    "- Definição de titularidade e repartição de benefícios;",
-    "- Estruturação contratual que reduza riscos.",
-    "",
-    "## Boas práticas",
-    "",
-    `Adotar uma abordagem estruturada para ${topic} reduz riscos e acelera a conexão pesquisa-mercado.`,
-    "",
-    "## Conclusão",
-    "",
-    "A estratégia de PI e transferência de tecnologia deve ser contínua. Um diagnóstico bem feito e contratos sob medida sustentam a inovação de ponta a ponta."
-  ].join("\n");
+    `<p>Este artigo apresenta uma análise técnica sobre <strong>${topic}</strong>, no contexto de ${catLabel}. Objetiva-se orientar decisões com segurança jurídica e estratégia de mercado, à luz das normas aplicáveis.</p>`,
+    `<h2>Por que ${topic} importa</h2>`,
+    `<p>Compreender ${topic} é condição essencial para converter conhecimento em valor. Empresas, universidades e pesquisadores demandam processos claros para proteger ativos intangíveis e negociar contratos.</p>`,
+    `<h3>Pontos de atenção</h3>`,
+    "<ul>",
+    "<li>Identificação e proteção adequada dos ativos intangíveis;</li>",
+    "<li>Definição de titularidade e repartição de benefícios;</li>",
+    "<li>Estruturação contratual que reduza riscos;</li>",
+    "</ul>",
+    "<h2>Boas práticas</h2>",
+    `<p>A adoção de abordagem estruturada para ${topic} reduz riscos e acelera a conexão entre pesquisa e mercado, conforme diretrizes do Instituto Nacional da Propriedade Industrial (INPI).</p>`,
+    "<h2>Conclusão</h2>",
+    `<p>A estratégia de Propriedade Intelectual e de transferência de tecnologia deve ser contínua. Diagnóstico criterioso e instrumentos contratuais adequados sustentam a inovação de ponta a ponta.</p>`
+  ].join("");
 
   const metaTitle = clampText(title, SEO_LIMITS.title);
   const metaDescription = clampText(
@@ -170,6 +193,8 @@ export function heuristicArticle(input: ArticleGenInput): ArticleDraft {
 function buildUserPrompt(input: ArticleGenInput): string {
   const lines = [
     "Gere um novo artigo do nicho de Propriedade Intelectual / Transferência de Tecnologia.",
+    "Formato obrigatório do campo \"content\": HTML semântico (<p>, <h2>, <h3>, <strong>, <em>, <ul>/<ol>/<li>, <blockquote>), sem Markdown e sem quebras de linha para separar blocos.",
+    "Escreva em português do Brasil, com linguagem formal e impessoal (norma culta, 3ª pessoa), na estrutura ABNT: introdução contextualizada, desenvolvimento em seções <h2>/<h3> e conclusão em <h2>Conclusão</h2>. Cite leis e órgãos corretamente (ex.: Lei nº 9.279/1996; INPI).",
     input.topic?.trim()
       ? `Tema/ideia sugerida (priorize este rumo): ${toPlainText(input.topic).slice(0, 300)}`
       : "Sem tema definido: escolha um tema ATUAL e relevante do nicho (ex.: patenteabilidade de software/IA, contratos de licenciamento, NDA em P&D, transferência universidade-empresa, marcas e proteção de dados).",
@@ -261,7 +286,9 @@ export async function generateArticleWithAi(
     const title = clampText(ensurePtBrText(str("title"), fallback.title), 120);
     const category = coerceCategory(parsed.category, input.category ?? fallback.category);
     const summary = clampText(ensurePtBrText(str("summary"), fallback.summary), 200);
-    const body = ensurePtBrText(str("content"), fallback.content) || fallback.content;
+    // Corpo: garante pt-BR e converte/sanitiza para HTML semântico (ABNT).
+    const bodyRaw = ensurePtBrText(str("content"), fallback.content) || fallback.content;
+    const body = wrapIfPlain(ensureAbntHtml(bodyRaw)) || fallback.content;
 
     const metaTitle = clampText(
       ensurePtBrText(seoStr("meta_title"), title),

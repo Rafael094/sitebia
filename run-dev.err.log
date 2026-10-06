@@ -3,3 +3,143 @@
 Expected style "zIndex: 2px" to be unitless
 Expected style "zIndex: 2px" to be unitless
 Expected style "zIndex: 2px" to be unitless
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx
+ ⨯ ./lib/rich-html.ts
+Error:   [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4mC:\Users\ra_s_\OneDrive\Área de Trabalho\site\Site+painel\lib\rich-html.ts[0m:130:1]
+ [2m127[0m | /**
+ [2m128[0m |  * Converte Markdown simples em HTML equivalente ao do editor. Cobre o
+ [2m129[0m |  * subconjunto usado pelos rascunhos da IA e pelos conteúdos legados:
+ [2m130[0m |  * títulos (#/##/###), listas (-/*/1.), citações (>), negrito, itálico, código
+     : [35;1m                                   ^|[0m[33;1m^[0m
+     :                                     [35;1m`-- [35;1mThis is the expression part of an expression statement[0m[0m
+ [2m131[0m |  * inline, links, imagens, `---` (hr) e parágrafos. Se o texto já for HTML,
+ [2m132[0m |  * devolve-o inalterado (evita dupla conversão).
+ [2m132[0m |  */
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/rich-html.ts
+./components/home/About.tsx

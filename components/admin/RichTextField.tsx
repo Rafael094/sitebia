@@ -22,13 +22,18 @@ export default function RichTextField({
   id,
   label,
   value = "",
-  hint
+  hint,
+  placeholder,
+  onChange
 }: {
   name: string;
   id?: string;
   label?: string;
   value?: string;
   hint?: string;
+  placeholder?: string;
+  /** Notifica o HTML sanitizado atual (usado p.ex. para alimentar o SEO). */
+  onChange?: (html: string) => void;
 }) {
   return (
     <CkEditorField
@@ -37,6 +42,8 @@ export default function RichTextField({
       label={label}
       value={value}
       hint={hint}
+      placeholder={placeholder}
+      onChange={onChange}
     />
   );
 }

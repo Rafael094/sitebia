@@ -54,7 +54,7 @@ create table if not exists public.articles (
   slug            text not null unique,
   category        article_category not null,
   summary         text not null,                           -- resumo/lead
-  content         text not null default '',                -- corpo (Markdown)
+  content         text not null default '',                -- corpo (HTML semântico do editor)
   cover_image_url text not null default '',                -- capa via Supabase Storage
   is_published    boolean not null default false,          -- false = rascunho
   author          text not null default 'Bianca Martins',

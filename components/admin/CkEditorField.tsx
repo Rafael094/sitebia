@@ -72,7 +72,8 @@ export default function CkEditorField({
   label,
   value = "",
   hint,
-  placeholder = "Escreva o conteúdo…"
+  placeholder = "Escreva o conteúdo…",
+  onChange
 }: {
   name: string;
   id?: string;
@@ -80,15 +81,21 @@ export default function CkEditorField({
   value?: string;
   hint?: string;
   placeholder?: string;
+  /** Notifica o HTML sanitizado atual (usado p.ex. para alimentar o SEO). */
+  onChange?: (html: string) => void;
 }) {
   const hiddenRef = useRef<HTMLInputElement>(null);
   const [initialData] = useState<string>(() => sanitizeRichHtml(value));
 
   // Mantém o input oculto sincronizado com o HTML do editor.
-  const sync = useCallback((raw: string) => {
-    const clean = sanitizeRichHtml(raw);
-    if (hiddenRef.current) hiddenRef.current.value = clean;
-  }, []);
+  const sync = useCallback(
+    (raw: string) => {
+      const clean = sanitizeRichHtml(raw);
+      if (hiddenRef.current) hiddenRef.current.value = clean;
+      onChange?.(clean);
+    },
+    [onChange]
+  );
 
   return (
     <div className="space-y-1.5">

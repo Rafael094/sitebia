@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, CalendarDays, UserRound } from "lucide-react";
 
-import RichText from "@/components/ui/RichText";
+import HtmlContent from "@/components/ui/HtmlContent";
 import CtaBanner from "@/components/ui/CtaBanner";
 import { ARTICLE_CATEGORIES, SITE } from "@/lib/constants";
 import { getAdjacentArticles, getPublishedArticleBySlug } from "@/lib/queries";
@@ -133,7 +133,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           </div>
 
           <div className="mt-10 max-w-3xl">
-            <RichText content={article.content} />
+            <HtmlContent content={article.content} />
           </div>
         </div>
 

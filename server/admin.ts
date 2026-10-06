@@ -9,6 +9,7 @@ import { randomId, slugify } from "@/lib/utils";
 import { resolveArticleSeo } from "@/lib/seo-article";
 import { readSeoFromFormData } from "@/lib/seo-form";
 import { normalizeSeoMetadata } from "@/lib/seo-types";
+import { sanitizeRichHtml } from "@/lib/rich-html";
 import { resolveAutoSeo } from "@/server/seo-admin";
 import type { ArticleCategory } from "@/lib/types";
 
@@ -26,7 +27,7 @@ async function upsertService(formData: FormData, id?: string) {
   const title = String(formData.get("title") ?? "").trim();
   let slug = String(formData.get("slug") ?? "").trim() || slugify(title);
   const summary = String(formData.get("summary") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const description = sanitizeRichHtml(String(formData.get("description") ?? "").trim());
   const audience = String(formData.get("audience") ?? "").trim();
   const problems = String(formData.get("problems") ?? "").trim();
   const scope = String(formData.get("scope") ?? "").trim();
@@ -125,8 +126,9 @@ async function upsertArticle(formData: FormData, id?: string) {
   const isPublished = formData.get("is_published") === "on";
   // Imagem no próprio dado (form hidden atualizado via upload assíncrono).
   const coverImageUrl = String(formData.get("cover_image_url") ?? "").trim();
-  // Correção: evita dupla proteção de quebras (\\n virando texto literal).
-  const contentClean = String(content).replace(/\\\\r?\\\\n/g, "\n");
+  // Correção: evita dupla proteção de quebras (\n virando texto literal).
+  // O corpo agora vem como HTML rico (CKEditor 5) — sanitiza antes de gravar.
+  const contentClean = sanitizeRichHtml(String(content).replace(/\\\\r?\\\\n/g, "\n"));
   const seoLegacy = resolveArticleSeo({
     title,
     summary,
