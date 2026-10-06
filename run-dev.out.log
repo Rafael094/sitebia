@@ -1,0 +1,19 @@
+
+> bianca-martins-site-painel@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.198:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 6.8s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 8.7s (1053 modules)
+ ✓ Compiled in 1061ms (317 modules)
+ GET / 200 in 10884ms
+ GET / 200 in 2322ms
+ ○ Compiling /admin/login ...
+ ✓ Compiled /admin/login in 2.2s (919 modules)
+ GET /admin/login 200 in 3451ms
