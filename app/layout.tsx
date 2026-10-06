@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Cinzel, Montserrat } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import "@/app/globals.css";
 
@@ -101,6 +102,7 @@ export default async function RootLayout({
             <WhatsAppButton />
           </ContactChannelsProvider>
         </SectionsProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

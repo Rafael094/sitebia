@@ -17,3 +17,9 @@
  ○ Compiling /admin/login ...
  ✓ Compiled /admin/login in 2.2s (919 modules)
  GET /admin/login 200 in 3451ms
+ ✓ Compiled in 183ms (320 modules)
+ ✓ Compiled in 571ms (899 modules)
+ GET / 200 in 1238ms
+ ✓ Compiled in 807ms (888 modules)
+ GET / 200 in 375ms
+ GET / 200 in 1007ms
