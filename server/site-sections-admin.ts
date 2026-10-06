@@ -10,6 +10,9 @@ import {
   mergePageContentRow
 } from "@/lib/page-content";
 import { sanitizeRichHtml } from "@/lib/rich-html";
+import { readSeoFromFormData } from "@/lib/seo-form";
+import { normalizeSeoMetadata } from "@/lib/seo-types";
+import { resolveAutoSeo } from "@/server/seo-admin";
 import { randomId } from "@/lib/utils";
 import type { PageContent, PageSectionKey } from "@/lib/types";
 
@@ -24,7 +27,8 @@ const PLAIN_FIELDS: (keyof PageContent)[] = [
   "button_secondary_url",
   "badge_extra_title",
   "badge_extra_sub",
-  "image_url"
+  "image_url",
+  "academic_title"
 ];
 
 /**
@@ -130,6 +134,45 @@ export async function saveSectionContentAction(
   } as Partial<PageContent>;
 
   const admin = getAdminSupabaseClient();
+
+  // --- SEO editável (DeepSeek) ---------------------------------------------
+  // 1) Lê o que o admin preencheu no painel;
+  // 2) Se nada foi informado, aciona a IA automaticamente com o texto da seção.
+  const manualSeo = readSeoFromFormData(formData);
+  const sectionText =
+    richValues.description ||
+    plainValues.description ||
+    plainValues.subtitle ||
+    plainValues.title ||
+    "";
+
+  if (manualSeo.meta_title || manualSeo.meta_description) {
+    // Admin assumiu o controle — grava exatamente o que ele escreveu.
+    payload.seo_metadata = { ...manualSeo, source: "manual" };
+  } else {
+    const existing = await admin
+      .from("page_contents")
+      .select("seo_metadata" as never)
+      .eq("section_key", key)
+      .maybeSingle();
+    const current = normalizeSeoMetadata(
+      (existing.data as { seo_metadata?: unknown } | null)?.seo_metadata
+    );
+
+    if (current.meta_title && current.meta_description) {
+      payload.seo_metadata = current; // nada a fazer: já otimizado
+    } else {
+      const { seo } = await resolveAutoSeo({
+        title: plainValues.title || key,
+        body: sectionText,
+        kind: `Seção do site (${key})`,
+        context: "/",
+        current
+      });
+      payload.seo_metadata = seo;
+    }
+  }
+
   const { error } = await admin
     .from("page_contents")
     .upsert([{ ...payload } as never], { onConflict: "section_key" });

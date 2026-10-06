@@ -6,15 +6,50 @@ import { ArrowLeft, ArrowRight, CalendarDays, UserRound } from "lucide-react";
 
 import RichText from "@/components/ui/RichText";
 import CtaBanner from "@/components/ui/CtaBanner";
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
+import { ARTICLE_CATEGORIES, SITE } from "@/lib/constants";
 import { getAdjacentArticles, getPublishedArticleBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/utils";
+import { normalizeSeoMetadata } from "@/lib/seo-types";
 import ShareBar from "@/components/ui/ShareBar";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+/** SEO dinâmico por artigo — prioriza o seo_metadata gerado/editado no painel. */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getPublishedArticleBySlug(slug).catch(() => null);
+  if (!article) {
+    return { title: "Conteúdo não encontrado", robots: { index: false } };
+  }
+
+  const seo = normalizeSeoMetadata(article.seo_metadata);
+  const description =
+    seo.meta_description || article.meta_description || article.summary || SITE.description;
+  const keywords =
+    seo.meta_keywords ||
+    (article.tags && article.tags.length ? article.tags.join(", ") : "");
+
+  return {
+    title: seo.meta_title || article.title,
+    description,
+    keywords: keywords ? keywords.split(",").map((k) => k.trim()).filter(Boolean) : undefined,
+    alternates: { canonical: `/conteudos/${article.slug}` },
+    openGraph: {
+      title: seo.og_title || seo.meta_title || article.title,
+      description: seo.og_description || description,
+      type: "article",
+      url: `/conteudos/${article.slug}`,
+      images: seo.og_image
+        ? [{ url: seo.og_image }]
+        : article.cover_image_url
+          ? [{ url: article.cover_image_url }]
+          : undefined
+    }
+  };
 }
 
 export default async function ArticleDetailPage({ params }: Props) {

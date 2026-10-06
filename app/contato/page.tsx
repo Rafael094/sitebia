@@ -5,12 +5,10 @@ import type { SiteContactLinks } from "@/lib/types";
 import { getPublicContactChannels } from "@/lib/settings";
 import PageHero from "@/components/ui/PageHero";
 import ContactForm from "@/components/home/ContactForm";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Contato",
-  description:
-    "Entre em contato com Bianca Martins para consultoria em transferência de tecnologia e propriedade intelectual."
-};
+// SEO editável pelo painel (/admin/seo) com fallback no padrão do site.
+export const generateMetadata = (): Promise<Metadata> => pageMetadata("/contato");
 
 const buildChannels = (contact: SiteContactLinks) => [
   {

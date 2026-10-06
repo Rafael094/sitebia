@@ -5,13 +5,10 @@ import ServicesHeader from "@/components/ui/ServicesHeader";
 import TechNetworkBg from "@/components/ui/TechNetworkBg";
 import AtuacaoCta from "@/components/ui/AtuacaoCta";
 import { getActiveServices } from "@/lib/queries";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  // A marca é acrescentada pelo template do layout raiz — não repetir aqui.
-  title: "Áreas de Atuação",
-  description:
-    "Conheça todas as áreas de atuação: diagnóstico de PI, estruturação de portfólio, conexão pesquisa-mercado e contratos de transferência de tecnologia."
-};
+// SEO editável pelo painel (/admin/seo) com fallback no padrão do site.
+export const generateMetadata = (): Promise<Metadata> => pageMetadata("/atuacao");
 
 export const dynamic = "force-dynamic";
 

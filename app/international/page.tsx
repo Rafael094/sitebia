@@ -13,49 +13,18 @@ import IntlAbout from "@/components/international/IntlAbout";
 import IntlFaq from "@/components/international/IntlFaq";
 import IntlFinalCta from "@/components/international/IntlFinalCta";
 import IntlContactSection from "@/components/international/IntlContactSection";
-import { SITE } from "@/lib/constants";
 import { PAGE_SECTION_KEYS } from "@/lib/page-content";
 import { getSiteSectionMap } from "@/lib/site-content";
+import { pageMetadata } from "@/lib/page-metadata";
+import { SITE } from "@/lib/constants";
+import { PAGE_SEO_REGISTRY } from "@/lib/page-seo";
 
-const PAGE_URL = "/international";
+const PAGE_URL = PAGE_SEO_REGISTRY["/international"].path;
 
-const TITLE =
-  "International Clients | IP, Innovation & Technology Transfer in Brazil";
-const DESCRIPTION =
-  "Brazilian legal and strategic support for foreign companies and international law firms seeking intellectual property protection, market entry and innovation partnerships in Brazil.";
-
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  keywords: [
-    "intellectual property Brazil",
-    "trademark registration Brazil",
-    "trademark lawyer Brazil",
-    "patent protection Brazil",
-    "Brazilian IP lawyer",
-    "IP protection Brazil",
-    "technology transfer Brazil",
-    "innovation partnerships Brazil",
-    "Brazil market entry",
-    "Brazilian IP counsel"
-  ],
-  alternates: {
-    canonical: PAGE_URL
-  },
-  openGraph: {
-    title: TITLE,
-    description: DESCRIPTION,
-    url: PAGE_URL,
-    type: "website",
-    locale: "en_US",
-    siteName: SITE.name
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION
-  }
-};
+// SEO editável pelo painel (/admin/seo) com fallback no padrão da página.
+// Mantém o locale en_US e as palavras-chave voltadas ao mercado internacional.
+export const generateMetadata = (): Promise<Metadata> =>
+  pageMetadata("/international");
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +46,7 @@ export default async function InternationalPage() {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
     name: `${SITE.name} — International Clients`,
-    description: DESCRIPTION,
+    description: PAGE_SEO_REGISTRY["/international"].defaultDescription,
     areaServed: "Brazil",
     serviceType: [
       "Intellectual Property",

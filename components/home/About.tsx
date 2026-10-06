@@ -1,10 +1,65 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
+import { useSectionContent } from "@/components/site/SectionsProvider";
+import { sanitizeRichHtml } from "@/lib/rich-html";
+
 /**
- * Seção "Sobre Mim" exibida logo após a Hero na Home.
+ * Seção "Sobre mim" exibida logo após a Hero na Home.
  * Grid 2 colunas: texto (esquerda) e fotografia profissional (direita).
+ *
+ * Todo o conteúdo é editável pelo painel em page_contents (home_about):
+ * badge, título, descrição (texto rico), bloco de formação acadêmica e foto.
  */
+const FALLBACK_IMAGE = "/images/bianca-martins.jpg";
+
+/** Divide o título em linhas (\n) e marcadores **...** para destaque dourado. */
+function renderTitle(raw: string) {
+  const lines = (raw ?? "").split(/\r?\n/);
+  return lines.map((line, li) => {
+    const parts = line.split(/\*\*(.+?)\*\*/g);
+    const nodes: (string | { text: string })[] = [];
+    parts.forEach((p, i) => {
+      if (!p) return;
+      nodes.push(i % 2 === 1 ? { text: p } : p);
+    });
+    return (
+      <span key={li}>
+        {nodes.map((part, i) =>
+          typeof part === "string" ? (
+            part
+          ) : (
+            <span key={i} className="text-gold-400">
+              {part.text}
+            </span>
+          )
+        )}
+        {li < lines.length - 1 && <br />}
+      </span>
+    );
+  });
+}
+
 export default function About() {
+  const c = useSectionContent("home_about");
+
+  const imageSrc = c.image_url && c.image_url.trim() ? c.image_url : FALLBACK_IMAGE;
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageSrc]);
+  const showImage = Boolean(imageSrc) && !imageFailed;
+
+  // Descrição e formação são gravadas como HTML rico pelo painel.
+  // Sanitizamos novamente no cliente antes de renderizar (defesa em profundidade).
+  const descriptionHtml = sanitizeRichHtml(c.description || "");
+  const academicItemsHtml = sanitizeRichHtml(c.academic_items || "");
+  const hasAcademic = Boolean(
+    (c.academic_title && c.academic_title.trim()) || academicItemsHtml.trim()
+  );
+
   return (
     <section
       id="sobre"
@@ -15,66 +70,37 @@ export default function About() {
       <div className="container-site grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
         {/* Coluna textual */}
         <div>
-          <p className="section-eyebrow !text-gold-300">Sobre</p>
+          <p className="section-eyebrow !text-gold-300">{c.badge_text || "SOBRE"}</p>
 
-          <h2 className="font-display text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            Quem está por trás
-            <br />
-            da ponte entre pesquisa e mercado
-          </h2>
+          {c.title && (
+            <h2 className="font-display text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              {renderTitle(c.title)}
+            </h2>
+          )}
 
-          <div className="mt-5 space-y-5 text-base leading-relaxed text-ivory-200/90">
-            <p>
-              Por muito tempo, minha atuação girou em torno de propriedade
-              intelectual. Foi nesse caminho que percebi um problema maior:
-              empresas que querem inovar em parceria com universidades esbarram
-              em um processo para o qual raramente estão preparadas, que é
-              negociar projetos, definir contrapartidas, entender prazos e
-              cláusulas que não aparecem em um contrato comercial comum.
-            </p>
-            <p>
-              Foi por isso que ampliei minha atuação. Hoje, ajudo empresas a
-              estruturar e negociar projetos de transferência de tecnologia com
-              universidades, do primeiro contato até a assinatura do contrato,
-              para que a inovação não trave por falta de estrutura.
-            </p>
-            <p>
-              Se a sua empresa está buscando ou já iniciou uma parceria com
-              universidade para um projeto de inovação, aqui eu ajudo com
-              conteúdos sobre esse tema.
-            </p>
-          </div>
+          {descriptionHtml && (
+            <div
+              className="prose-about mt-5"
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
+          )}
 
           {/* Bloco de formação acadêmica */}
-          <div className="mt-8 border-l-4 border-gold-500 bg-white p-6 shadow-card ring-1 ring-navy-800/5">
-            <h3 className="font-display text-sm font-bold uppercase tracking-[0.18em] text-gold-600">
-              Formação acadêmica
-            </h3>
-            <ul className="mt-4 space-y-4 text-sm">
-              <li>
-                <p className="font-semibold text-navy-900">
-                  Universidade Estadual de Maringá (UEM)
-                </p>
-                <p className="mt-0.5 text-navy-600">
-                  Mestre em Propriedade Intelectual, Transferência de Tecnologia
-                  para Inovação, Sandbox regulatório e inovação no setor público
-                  (2020 – 2024).{" "}
-                  <span className="text-navy-700">
-                    Apoio à elaboração de legislação e normas internas sobre
-                    inovação.
-                  </span>
-                </p>
-              </li>
-              <li>
-                <p className="font-semibold text-navy-900">
-                  Universidade Estadual de Londrina (UEL)
-                </p>
-                <p className="mt-0.5 text-navy-600">
-                  Graduada em Direito (2012 – 2017).
-                </p>
-              </li>
-            </ul>
-          </div>
+          {hasAcademic && (
+            <div className="mt-8 border-l-4 border-gold-500 bg-white p-6 shadow-card ring-1 ring-navy-800/5">
+              {c.academic_title && (
+                <h3 className="font-display text-sm font-bold uppercase tracking-[0.18em] text-gold-600">
+                  {c.academic_title}
+                </h3>
+              )}
+              {academicItemsHtml && (
+                <div
+                  className="prose-about-box mt-4"
+                  dangerouslySetInnerHTML={{ __html: academicItemsHtml }}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Coluna da fotografia profissional */}
@@ -82,14 +108,25 @@ export default function About() {
           {/* Moldura elegante com folheado dourado */}
           <div className="absolute inset-0 -rotate-1 rounded-md border border-gold-500/40" />
           <div className="relative aspect-[4/5] w-full rotate-1 overflow-hidden rounded-md border border-gold-500/70 bg-navy-800 transition-transform duration-300 hover:rotate-0">
-            <Image
-              src="/images/bianca-martins.jpg"
-              alt="Retrato profissional de Bianca Martins"
-              fill
-              priority
-              sizes="(min-width: 1024px) 42vw, 90vw"
-              className="object-cover object-top"
-            />
+            {showImage ? (
+              <Image
+                src={imageSrc}
+                alt="Retrato profissional de Bianca Martins"
+                fill
+                priority
+                sizes="(min-width: 1024px) 42vw, 90vw"
+                className="object-cover object-top"
+                onError={() => setImageFailed(true)}
+              />
+            ) : (
+              /* Placeholder de moldura (apenas sem imagem ou em caso de erro) */
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-navy-900 via-navy-700 to-navy-800">
+                <span className="font-display text-6xl font-bold text-gold-400">BM</span>
+                <span className="mt-3 text-[11px] font-medium uppercase tracking-[0.3em] text-ivory-100/70">
+                  Bianca Martins
+                </span>
+              </div>
+            )}
             {/* Selo decorativo dourado no canto */}
             <span className="pointer-events-none absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-gold-500/20 blur-2xl" />
           </div>

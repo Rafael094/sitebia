@@ -6,13 +6,11 @@ import ServicesOverview from "@/components/home/ServicesOverview";
 import Journey from "@/components/home/Journey";
 import LatestArticles from "@/components/home/LatestArticles";
 import CtaBanner from "@/components/ui/CtaBanner";
-import { SITE } from "@/lib/constants";
 import { getActiveServices, getPublishedArticles } from "@/lib/queries";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: SITE.title(),
-  description: SITE.description
-};
+// SEO editável pelo painel (/admin/seo) com fallback no padrão do site.
+export const generateMetadata = (): Promise<Metadata> => pageMetadata("/");
 
 /**
  * Seguimento padrão no Next: por padrão, páginas de GET são estáticas a menos

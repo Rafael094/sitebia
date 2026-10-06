@@ -1,13 +1,27 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, ExternalLink, Save } from "lucide-react";
 
 import RichTextField from "@/components/admin/RichTextField";
+import SeoFields from "@/components/admin/SeoFields";
 import { SECTION_META } from "@/lib/page-content";
 import { saveSectionContentAction } from "@/server/site-sections-admin";
+import { normalizeSeoMetadata } from "@/lib/seo-types";
 import type { PageContent, PageSectionKey } from "@/lib/types";
+
+/** URL pública onde cada seção aparece (usada no preview de SEO). */
+const SECTION_PUBLIC_URL: Record<string, string> = {
+  home_hero: "/",
+  home_services_header: "/",
+  home_journey_header: "/",
+  home_about: "/",
+  home_cta: "/",
+  page_services_header: "/atuacao",
+  page_articles_header: "/conteudos",
+  page_contact_header: "/contato"
+};
 
 /**
  * Formulário de edição de uma seção institucional (page_contents).
@@ -31,6 +45,12 @@ export default function SectionEditorForm({
   >({ kind: "idle" });
   // Pré-visualização da imagem do Hero antes do envio (input#IMAGE_FILE -> img#imagePreview).
   const [previewSrc, setPreviewSrc] = useState<string>(content.image_url ?? "");
+
+  // Após o servidor revalidar (router.refresh), o prop content é atualizado com a
+  // URL pública definitiva — sincroniza o preview com o valor realmente persistido.
+  useEffect(() => {
+    setPreviewSrc(content.image_url ?? "");
+  }, [content.image_url]);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -124,6 +144,26 @@ export default function SectionEditorForm({
           hint="Destaque em forma de citação dentro da seção."
         />
       )}
+      {content.academic_title !== undefined && (
+        <div>
+          <label className="label-field">Formação — título do bloco</label>
+          <input
+            name="academic_title"
+            defaultValue={content.academic_title ?? ""}
+            className="input-field"
+            placeholder="ex.: Formação acadêmica"
+          />
+        </div>
+      )}
+
+      {content.academic_items !== undefined && (
+        <RichTextField
+          name="academic_items"
+          label="Formação — itens (texto rico)"
+          value={content.academic_items}
+          hint="Cada formação em um parágrafo; use negrito para o nome da instituição e <br> para a linha de detalhe."
+        />
+      )}
       {twoButtons && (
         <details className="rounded-sm border border-navy-800/10 px-3 py-2 md:col-span-2">
           <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-navy-600">
@@ -195,6 +235,18 @@ export default function SectionEditorForm({
           </div>
         </div>
       )}
+
+      <SeoFields
+        initial={normalizeSeoMetadata(content.seo_metadata)}
+        title={String(content.title ?? "").split("\n")[0]}
+        body={[content.subtitle, content.description, content.quote_text]
+          .map((v) => String(v ?? ""))
+          .filter(Boolean)
+          .join("\n\n")}
+        kind={`Secao do site (${sectionKey})`}
+        context={SECTION_PUBLIC_URL[sectionKey] ?? "/"}
+        idPrefix={`section-${sectionKey}`}
+      />
 
       <div className="flex flex-wrap items-center gap-3 pt-1">
         <button type="submit" disabled={status.kind === "saving"} className="btn-primary">

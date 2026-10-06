@@ -4,12 +4,14 @@
 // sem perder o estilo. Sanitização tem allowlist rigorosa (sem scripts).
 // ============================================================================
 
-const SAFE_ATTR = /^(href|title|target|rel|alt)$/i;
-const DANGER = /^on|javascript:|data:/i;
+const SAFE_ATTR =
+  /^(href|title|target|rel|alt|src|width|height|colspan|rowspan|scope|style|class|loading)$/i;
+const DANGER = /^on|javascript:/i;
 
 /* Tags do editor mapeadas para o subconjunto que exibimos no site. */
 const MAP_TAGS: Record<string, string> = { H1: "h2", DIV: "p" };
-const ALLOWED = /^(p|br|b|strong|i|em|u|span|ul|ol|li|blockquote|h2|h3|h4|a|code|pre)$/i;
+const ALLOWED =
+  /^(p|br|b|strong|i|em|u|s|del|span|ul|ol|li|blockquote|h2|h3|h4|h5|h6|a|code|pre|hr|figure|figcaption|img|table|thead|tbody|tfoot|tr|th|td|caption)$/i;
 
 /** Copia apenas tags/atributos seguros de um nó para dentro de `out`. */
 function cleanNode(node: Node, out: HTMLElement) {

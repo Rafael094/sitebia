@@ -73,9 +73,14 @@ export const DEFAULT_PAGE_CONTENTS: Record<PageSectionKey, PageContent> = {
   home_about: {
     section_key: "home_about",
     badge_text: "SOBRE",
-    title: "Bianca Martins",
+    title:
+      "Quem está por trás\nda ponte entre pesquisa e mercado",
     description:
-      "Atuação em propriedade intelectual ligada à interface pesquisaâ€“mercado."
+      "<p>Por muito tempo, minha atuação girou em torno de propriedade intelectual. Foi nesse caminho que percebi um problema maior: empresas que querem inovar em parceria com universidades esbarram em um processo para o qual raramente estão preparadas, que é negociar projetos, definir contrapartidas, entender prazos e cláusulas que não aparecem em um contrato comercial comum.</p><p>Foi por isso que ampliei minha atuação. Hoje, ajudo empresas a estruturar e negociar projetos de transferência de tecnologia com universidades, do primeiro contato até a assinatura do contrato, para que a inovação não trave por falta de estrutura.</p><p>Se a sua empresa está buscando ou já iniciou uma parceria com universidade para um projeto de inovação, aqui eu ajudo com conteúdos sobre esse tema.</p>",
+    academic_title: "Formação acadêmica",
+    academic_items:
+      "<p><strong>Universidade Estadual de Maringá (UEM)</strong><br />Mestre em Propriedade Intelectual, Transferência de Tecnologia para Inovação, Sandbox regulatório e inovação no setor público (2020 – 2024). Apoio à elaboração de legislação e normas internas sobre inovação.</p><p><strong>Universidade Estadual de Londrina (UEL)</strong><br />Graduada em Direito (2012 – 2017).</p>",
+    image_url: "/images/bianca-martins.jpg"
   },
 
   // ==========================================================================
@@ -194,7 +199,11 @@ export const DEFAULT_PAGE_CONTENTS: Record<PageSectionKey, PageContent> = {
 };
 
 /** Campos que aceitam formatação rica (HTML). */
-export const RICH_FIELDS: (keyof PageContent)[] = ["description", "quote_text"];
+export const RICH_FIELDS: (keyof PageContent)[] = [
+  "description",
+  "quote_text",
+  "academic_items"
+];
 
 /** Rótulos curtos exibidos no formulário de cada campo. */
 export const FIELD_LABELS: Record<keyof PageContent, string> = {
@@ -211,6 +220,9 @@ export const FIELD_LABELS: Record<keyof PageContent, string> = {
   badge_extra_title: "Selo â€” número",
   badge_extra_sub: "Selo â€” legenda",
   image_url: "Imagem (enviar arquivo)",
+  academic_title: "Formação — título do bloco",
+  academic_items: "Formação — itens (texto rico)",
+  seo_metadata: "SEO & Metadados (IA)",
   updated_at: "Atualizado em"
 };
 
@@ -242,7 +254,7 @@ export const SECTION_META: Record<
   home_about: {
     label: "Sobre mim (Home)",
     group: "Home",
-    hint: "Bloco 'Sobre' exibido depois do Hero."
+    hint: "Bloco 'Sobre' completo: texto, formação acadêmica e fotografia."
   },
   page_services_header: {
     label: "Cabeçalho /atuacao",
@@ -328,6 +340,7 @@ export const PAGE_SECTION_KEYS: PageSectionKey[] = [
   "home_hero",
   "home_services_header",
   "home_journey_header",
+  "home_about",
   "home_cta",
   "page_services_header",
   "page_articles_header",

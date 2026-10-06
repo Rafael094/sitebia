@@ -10,6 +10,7 @@ import ServiceIcon from "@/components/icons/ServiceIcon";
 import { SITE } from "@/lib/constants";
 import { getActiveServices, getServiceBySlug } from "@/lib/queries";
 import { splitLines } from "@/lib/utils";
+import { normalizeSeoMetadata } from "@/lib/seo-types";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +21,28 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const service = await getServiceBySlug(slug).catch(() => null);
+  if (!service) {
+    return { title: "Serviço não encontrado", robots: { index: false } };
+  }
+
+  const seo = normalizeSeoMetadata(service.seo_metadata);
+  const description = seo.meta_description || service.summary || SITE.description;
+
   return {
     // A marca é acrescentada pelo template do layout raiz — não repetir aqui.
-    title: service ? service.title : "Serviço não encontrado",
-    description: service?.summary ?? SITE.description
+    title: seo.meta_title || service.title,
+    description,
+    keywords: seo.meta_keywords
+      ? seo.meta_keywords.split(",").map((k) => k.trim()).filter(Boolean)
+      : undefined,
+    alternates: { canonical: `/atuacao/${service.slug}` },
+    openGraph: {
+      title: seo.og_title || seo.meta_title || service.title,
+      description: seo.og_description || description,
+      type: "article",
+      url: `/atuacao/${service.slug}`,
+      images: seo.og_image ? [{ url: seo.og_image }] : undefined
+    }
   };
 }
 

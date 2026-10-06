@@ -28,6 +28,7 @@ export const ADMIN_LINKS = [
   { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Serviços", href: "/admin/servicos" },
   { label: "Conteúdos", href: "/admin/conteudos" },
+  { label: "SEO das páginas", href: "/admin/seo" },
   { label: "Mensagens", href: "/admin/mensagens" },
   { label: "Seções do site", href: "/admin/secoes" },
   { label: "Configurações", href: "/admin/configuracoes" }

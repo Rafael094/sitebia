@@ -408,6 +408,27 @@ values
   )
 on conflict (section_key) do nothing;
 
+-- ================================================================
+-- 10.1. SECAO "SOBRE MIM" (HOME) - totalmente editavel no painel
+-- Colunas extras do bloco de formação acadêmica e seed da linha home_about.
+-- ================================================================
+alter table public.page_contents
+  add column if not exists academic_title text,
+  add column if not exists academic_items text;
+
+insert into public.page_contents
+  (section_key, badge_text, title, description, academic_title, academic_items, image_url)
+values (
+  'home_about',
+  'SOBRE',
+  E'Quem está por trás\nda ponte entre pesquisa e mercado',
+  '<p>Por muito tempo, minha atuação girou em torno de propriedade intelectual. Foi nesse caminho que percebi um problema maior: empresas que querem inovar em parceria com universidades esbarram em um processo para o qual raramente estão preparadas, que é negociar projetos, definir contrapartidas, entender prazos e cláusulas que não aparecem em um contrato comercial comum.</p><p>Foi por isso que ampliei minha atuação. Hoje, ajudo empresas a estruturar e negociar projetos de transferência de tecnologia com universidades, do primeiro contato até a assinatura do contrato, para que a inovação não trave por falta de estrutura.</p><p>Se a sua empresa está buscando ou já iniciou uma parceria com universidade para um projeto de inovação, aqui eu ajudo com conteúdos sobre esse tema.</p>',
+  'Formação acadêmica',
+  '<p><strong>Universidade Estadual de Maringá (UEM)</strong><br />Mestre em Propriedade Intelectual, Transferência de Tecnologia para Inovação, Sandbox regulatório e inovação no setor público (2020 – 2024). Apoio à elaboração de legislação e normas internas sobre inovação.</p><p><strong>Universidade Estadual de Londrina (UEL)</strong><br />Graduada em Direito (2012 – 2017).</p>',
+  '/images/bianca-martins.jpg'
+)
+on conflict (section_key) do nothing;
+
 -- Artigos de exemplo
 insert into public.articles
   (title, slug, category, summary, content, cover_image_url, is_published, author)

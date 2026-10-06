@@ -1,3 +1,5 @@
+import type { SeoMetadata } from "@/lib/seo-types";
+
 // ============================================================================
 // Tipos e tipagem de banco de dados (espelham o schema.sql do Supabase)
 // ============================================================================
@@ -57,6 +59,8 @@ export interface Service {
   icon: string;
   order_index: number;
   is_active: boolean;
+  /** SEO editável (DeepSeek) por serviço/página de atuação. */
+  seo_metadata?: SeoMetadata | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,6 +81,8 @@ export interface Article {
   meta_description?: string;
   /** Tags/keywords de SEO (populadas automaticamente). */
   tags?: string[];
+  /** SEO editável (DeepSeek) — fonte primária do <head> da página. */
+  seo_metadata?: SeoMetadata | null;
   created_at: string;
   updated_at: string;
 }
@@ -131,6 +137,12 @@ export interface PageContent {
   badge_extra_title?: string;
   badge_extra_sub?: string;
   image_url?: string;
+  /** Título do bloco de formação acadêmica (usado na seção "Sobre" da Home). */
+  academic_title?: string;
+  /** Itens da formação acadêmica em HTML rico (parágrafos). */
+  academic_items?: string;
+  /** SEO editável (DeepSeek) por seção/página institucional. */
+  seo_metadata?: SeoMetadata | null;
   updated_at?: string;
 }
 
@@ -198,6 +210,9 @@ export interface Database {
             | "badge_extra_title"
             | "badge_extra_sub"
             | "image_url"
+            | "academic_title"
+            | "academic_items"
+            | "seo_metadata"
           >
         >;
         Update: Partial<
@@ -216,8 +231,17 @@ export interface Database {
             | "badge_extra_title"
             | "badge_extra_sub"
             | "image_url"
+            | "academic_title"
+            | "academic_items"
+            | "seo_metadata"
           >
         >;
+        Relationships: [];
+      };
+      page_seo: {
+        Row: { page_key: string; seo_metadata: SeoMetadata; created_at: string; updated_at: string };
+        Insert: { page_key: string; seo_metadata?: SeoMetadata };
+        Update: { page_key?: string; seo_metadata?: SeoMetadata };
         Relationships: [];
       };
     };

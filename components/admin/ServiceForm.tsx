@@ -4,7 +4,9 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 
+import SeoFields from "@/components/admin/SeoFields";
 import { createService, updateServiceAction } from "@/server/admin";
+import { normalizeSeoMetadata } from "@/lib/seo-types";
 import type { Service } from "@/lib/types";
 
 /**
@@ -23,6 +25,11 @@ export default function ServiceForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  // Espelhos do conteúdo atual para alimentar o gerador de SEO (DeepSeek).
+  const [title, setTitle] = useState(service?.title ?? "");
+  const [summary, setSummary] = useState(service?.summary ?? "");
+  const [description, setDescription] = useState(service?.description ?? "");
+  const [slug, setSlug] = useState(service?.slug ?? "");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,12 +67,12 @@ export default function ServiceForm({
         <div className="md:col-span-2">
           <label htmlFor="title" className="label-field">Título do serviço *</label>
           <input id="title" name="title" required className="input-field" placeholder="Ex.: Assessoria em patentes"
-            defaultValue={service?.title ?? ""} />
+            value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div>
           <label htmlFor="slug" className="label-field">Slug (URL)</label>
           <input id="slug" name="slug" className="input-field" placeholder="Deixe vazio para gerar automaticamente"
-            defaultValue={service?.slug ?? ""} />
+            value={slug} onChange={(e) => setSlug(e.target.value)} />
         </div>
         <div>
           <label htmlFor="icon" className="label-field">Ícone Lucide</label>
@@ -75,13 +82,13 @@ export default function ServiceForm({
         <div className="md:col-span-2">
           <label htmlFor="summary" className="label-field">Resumo (card e listagens)</label>
           <textarea id="summary" name="summary" rows={3} className="input-field" placeholder="Resumo curto e comercial…"
-            defaultValue={service?.summary ?? ""} />
+            value={summary} onChange={(e) => setSummary(e.target.value)} />
         </div>
         <div className="md:col-span-2">
           <label htmlFor="description" className="label-field">Descrição detalhada (aceita Markdown)</label>
           <textarea id="description" name="description" rows={8} className="input-field font-mono text-sm"
             placeholder="# Visão geral&#10;&#10;Texto de apoio…"
-            defaultValue={service?.description ?? ""} />
+            value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
       </div>
 
@@ -100,6 +107,15 @@ export default function ServiceForm({
         <textarea name="scope" rows={3} className="input-field" placeholder="Diagnóstico inicial&#10;Plano de transferência"
           defaultValue={service?.scope ?? ""} />
       </div>
+
+      <SeoFields
+        initial={normalizeSeoMetadata(service?.seo_metadata)}
+        title={title}
+        body={[summary, description].filter(Boolean).join("\n\n")}
+        kind="Serviço / Área de atuação"
+        context={slug ? `/atuacao/${slug}` : "/atuacao"}
+        idPrefix="service"
+      />
 
       <div className="flex flex-wrap items-center gap-6">
         <div>

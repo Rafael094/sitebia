@@ -87,3 +87,97 @@
 .prose-article pre code { @apply bg-transparent p-0 text-white; }
 .prose-article strong { @apply font-semibold text-navy-900; }
 .prose-article hr { @apply my-8 border-navy-800/10; }
+.prose-article img { @apply my-6 h-auto max-w-full rounded-md; }
+.prose-article figure { @apply my-6; }
+.prose-article figure img { @apply my-0; }
+.prose-article figcaption {
+  @apply mt-2 text-center text-xs italic text-navy-500;
+}
+.prose-article table {
+  @apply my-6 w-full border-collapse overflow-hidden text-sm;
+}
+.prose-article table th,
+.prose-article table td {
+  @apply border border-navy-800/15 px-3 py-2 text-left align-top;
+}
+.prose-article table th {
+  @apply bg-ivory-50 font-semibold text-navy-900;
+}
+.prose-article iframe { @apply my-6 aspect-video h-auto w-full rounded-md; }
+
+/* Prosa da seção "Sobre mim" (Home). Texto claro sobre fundo navy. */
+.prose-about {
+  @apply text-base leading-relaxed text-ivory-200/90;
+}
+.prose-about p { @apply my-5; }
+.prose-about p:first-child { @apply mt-0; }
+.prose-about strong { @apply font-semibold text-white; }
+.prose-about a { @apply text-gold-300 underline underline-offset-2; }
+.prose-about ul, .prose-about ol { @apply my-4 space-y-2 pl-5; }
+.prose-about ul { @apply list-disc; }
+.prose-about ol { @apply list-decimal; }
+
+/* Prosa do bloco de formação acadêmica (caixa branca, texto escuro). */
+.prose-about-box {
+  @apply text-sm leading-relaxed text-navy-600;
+}
+.prose-about-box p { @apply mt-0 mb-4; }
+.prose-about-box p:last-child { @apply mb-0; }
+.prose-about-box strong { @apply font-semibold text-navy-900; }
+.prose-about-box a { @apply text-navy-700 underline underline-offset-2 decoration-gold-500; }
+.prose-about-box ul, .prose-about-box ol { @apply my-3 space-y-1.5 pl-5; }
+.prose-about-box ul { @apply list-disc; }
+.prose-about-box ol { @apply list-decimal; }
+
+/* ---------------------------------------------------------------------------
+   CKEditor 5 no painel: alinha o visual do editor ao design do admin.
+   As variáveis do .ck-admin também remapeiam o TEMA ESCURO do CKEditor para o
+   look claro do painel (navy/gold).
+   --------------------------------------------------------------------------- */
+.ck-admin .ck.ck-editor__main > .ck-editor__editable {
+  @apply max-h-96 min-h-32 px-4 py-3 text-navy-800 outline-none;
+}
+.ck-admin .ck.ck-editor__main > .ck-editor__editable.ck-focused {
+  @apply border-navy-800 ring-1 ring-navy-800;
+}
+.ck-admin .ck.ck-toolbar {
+  @apply border-navy-800/15 bg-ivory-50;
+}
+.ck-admin .ck.ck-toolbar .ck-toolbar__separator {
+  @apply bg-navy-800/15;
+}
+.ck-admin .ck.ck-button:not(.ck-disabled):hover,
+.ck-admin .ck.ck-button.ck-on {
+  @apply bg-gold-500/20 text-navy-900;
+}
+.ck-admin .ck.ck-dropdown__panel {
+  @apply border-navy-800/15 bg-white text-navy-800;
+}
+
+.ck-admin {
+  --ck-color-base-background: #ffffff;
+  --ck-color-base-border: rgba(15, 27, 51, 0.15);
+  --ck-color-base-text: #1b2540;
+  --ck-color-toolbar-background: #faf7f0;
+  --ck-color-toolbar-border: rgba(15, 27, 51, 0.15);
+  --ck-color-dropdown-panel-background: #ffffff;
+  --ck-color-dropdown-panel-border: rgba(15, 27, 51, 0.15);
+  --ck-color-panel-background: #ffffff;
+  --ck-color-panel-border: rgba(15, 27, 51, 0.15);
+  --ck-color-button-default-hover-background: rgba(212, 175, 55, 0.2);
+  --ck-color-button-on-background: rgba(212, 175, 55, 0.25);
+  --ck-color-button-on-hover-background: rgba(212, 175, 55, 0.3);
+  --ck-color-button-on-color: #10203c;
+  --ck-color-button-default-active-background: rgba(212, 175, 55, 0.25);
+  --ck-color-button-on-active-background: rgba(212, 175, 55, 0.3);
+  --ck-color-list-button-on-background: rgba(212, 175, 55, 0.25);
+  --ck-color-list-button-on-background-focus: rgba(212, 175, 55, 0.3);
+  --ck-color-list-button-on-text: #10203c;
+  --ck-color-focus-border: #10203c;
+  --ck-color-input-background: #ffffff;
+  --ck-color-input-border: rgba(15, 27, 51, 0.2);
+  --ck-color-input-text: #1b2540;
+  --ck-color-tooltip-background: #10203c;
+  --ck-color-tooltip-text: #ffffff;
+}
+

@@ -7,6 +7,9 @@ import { getAdminSupabaseClient } from "@/lib/supabase/admin";
 import { COVER_BUCKET } from "@/lib/constants";
 import { randomId, slugify } from "@/lib/utils";
 import { resolveArticleSeo } from "@/lib/seo-article";
+import { readSeoFromFormData } from "@/lib/seo-form";
+import { normalizeSeoMetadata } from "@/lib/seo-types";
+import { resolveAutoSeo } from "@/server/seo-admin";
 import type { ArticleCategory } from "@/lib/types";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,6 +37,35 @@ async function upsertService(formData: FormData, id?: string) {
   if (!title) return { ok: false, error: "Informe o título do serviço." };
 
   const admin = getAdminSupabaseClient();
+
+  // --- SEO editável (DeepSeek) ---------------------------------------------
+  // Manual tem prioridade; sem SEO informado/gravado, a IA otimiza sob demanda.
+  const manualSeo = readSeoFromFormData(formData);
+  let seoMetadata;
+  if (manualSeo.meta_title || manualSeo.meta_description) {
+    seoMetadata = { ...manualSeo, source: "manual" as const };
+  } else {
+    let current = {};
+    if (id) {
+      const existing = await admin
+        .from("services")
+        .select("seo_metadata" as never)
+        .eq("id", id)
+        .maybeSingle();
+      current = normalizeSeoMetadata(
+        (existing.data as { seo_metadata?: unknown } | null)?.seo_metadata
+      );
+    }
+    const { seo } = await resolveAutoSeo({
+      title,
+      body: [summary, description, audience, problems, scope].filter(Boolean).join("\n\n"),
+      kind: "Serviço / Área de atuação",
+      context: `/atuacao/${slug}`,
+      current
+    });
+    seoMetadata = seo;
+  }
+
   const payload = {
     title,
     slug,
@@ -44,7 +76,8 @@ async function upsertService(formData: FormData, id?: string) {
     scope,
     icon,
     order_index: orderIndex,
-    is_active: isActive
+    is_active: isActive,
+    seo_metadata: seoMetadata
   };
 
   const { error } = id
@@ -94,7 +127,7 @@ async function upsertArticle(formData: FormData, id?: string) {
   const coverImageUrl = String(formData.get("cover_image_url") ?? "").trim();
   // Correção: evita dupla proteção de quebras (\\n virando texto literal).
   const contentClean = String(content).replace(/\\\\r?\\\\n/g, "\n");
-  const seo = resolveArticleSeo({
+  const seoLegacy = resolveArticleSeo({
     title,
     summary,
     content: contentClean,
@@ -104,14 +137,51 @@ async function upsertArticle(formData: FormData, id?: string) {
   });
 
   const admin = getAdminSupabaseClient();
+
+  // --- SEO editável (DeepSeek) ---------------------------------------------
+  // Complementa o SEO legado (meta_description/tags) com o objeto seo_metadata
+  // usado pelo <head>. Manual tem prioridade sobre a geração automática.
+  const manualSeo = readSeoFromFormData(formData);
+  let seoMetadata;
+  if (manualSeo.meta_title || manualSeo.meta_description) {
+    seoMetadata = { ...manualSeo, source: "manual" as const };
+  } else {
+    let current = {};
+    if (id) {
+      const existing = await admin
+        .from("articles")
+        .select("seo_metadata" as never)
+        .eq("id", id)
+        .maybeSingle();
+      current = normalizeSeoMetadata(
+        (existing.data as { seo_metadata?: unknown } | null)?.seo_metadata
+      );
+    }
+    const { seo } = await resolveAutoSeo({
+      title,
+      body: [summary, contentClean].filter(Boolean).join("\n\n"),
+      kind: "Artigo / Conteúdo",
+      context: `/conteudos/${slug}`,
+      current
+    });
+    // Garante description/keywords mesmo no caminho heurístico local,
+    // reaproveitando o SEO legado já calculado (meta_description/tags).
+    seoMetadata = {
+      ...seo,
+      meta_description: seo.meta_description || seoLegacy.metaDescription,
+      meta_keywords: seo.meta_keywords || seoLegacy.tags.join(", ")
+    };
+  }
+
   const payload = {
     title,
     slug,
     category,
     summary,
     content: contentClean,
-    meta_description: seo.metaDescription,
-    tags: seo.tags,
+    meta_description: seoLegacy.metaDescription,
+    tags: seoLegacy.tags,
+    seo_metadata: seoMetadata,
     cover_image_url: coverImageUrl,
     is_published: isPublished,
     author

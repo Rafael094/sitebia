@@ -6,13 +6,10 @@ import ArticleCard from "@/components/ui/ArticleCard";
 import { ARTICLE_CATEGORIES } from "@/lib/constants";
 import { getPublishedArticles } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  // A marca é acrescentada pelo template do layout raiz — não repetir aqui.
-  title: "Conteúdos",
-  description:
-    "Artigos, análises e notas sobre transferência de tecnologia, propriedade intelectual e contratos & parcerias."
-};
+// SEO editável pelo painel (/admin/seo) com fallback no padrão do site.
+export const generateMetadata = (): Promise<Metadata> => pageMetadata("/conteudos");
 
 export const dynamic = "force-dynamic";
 

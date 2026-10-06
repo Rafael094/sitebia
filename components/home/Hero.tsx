@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown, CalendarCheck } from "lucide-react";
@@ -33,6 +34,14 @@ export default function Hero() {
   const secondary = c.button_secondary_label || "Conhecer a atuação";
   const secondaryUrl = c.button_secondary_url || "/atuacao";
   const imageSrc = c.image_url && c.image_url.trim() ? c.image_url : PORTRAIT_PATH;
+
+  // Só exibe o placeholder "BM" quando não há imagem OU quando ela falha ao carregar.
+  // Sem isso, o placeholder ficava sempre sobreposto e escondia a imagem enviada.
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageSrc]);
+  const showImage = Boolean(imageSrc) && !imageFailed;
 
   return (
     <section data-header-theme="light" className="relative overflow-hidden bg-ivory-100">
@@ -75,25 +84,25 @@ export default function Hero() {
         {/* Coluna visual */}
         <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-navy-800/5">
-            <Image
-              src={imageSrc}
-              alt={c.badge_text ?? "Retrato profissional de Bianca Martins"}
-              fill
-              priority
-              sizes="(min-width: 1024px) 45vw, 90vw"
-              className="object-cover"
-              onError={(e) => {
-                const t = e.currentTarget;
-                t.style.display = "none";
-              }}
-            />
-            {/* Placeholder de moldura (visível apenas quando a imagem falha) */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-navy-900 via-navy-700 to-navy-800">
-              <span className="font-display text-7xl font-bold text-gold-400">BM</span>
-              <span className="mt-3 text-[11px] font-medium uppercase tracking-[0.3em] text-ivory-100/70">
-                Bianca Martins
-              </span>
-            </div>
+            {showImage ? (
+              <Image
+                src={imageSrc}
+                alt={c.badge_text ?? "Retrato profissional de Bianca Martins"}
+                fill
+                priority
+                sizes="(min-width: 1024px) 45vw, 90vw"
+                className="object-cover"
+                onError={() => setImageFailed(true)}
+              />
+            ) : (
+              /* Placeholder de moldura (visível apenas quando não há imagem ou ela falha) */
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-navy-900 via-navy-700 to-navy-800">
+                <span className="font-display text-7xl font-bold text-gold-400">BM</span>
+                <span className="mt-3 text-[11px] font-medium uppercase tracking-[0.3em] text-ivory-100/70">
+                  Bianca Martins
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Card de credibilidade sobreposto */}

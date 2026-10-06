@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   Briefcase,
+  Search,
   Settings,
   SquareStack,
   X
@@ -25,6 +26,7 @@ const NAV_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/dashboard": LayoutDashboard,
   "/admin/servicos": Briefcase,
   "/admin/conteudos": FileText,
+  "/admin/seo": Search,
   "/admin/mensagens": Inbox,
   "/admin/secoes": SquareStack,
   "/admin/configuracoes": Settings
