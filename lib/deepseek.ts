@@ -13,6 +13,7 @@ import {
   type SeoMetadata,
   SEO_LIMITS
 } from "@/lib/seo-types";
+import { ensurePtBrText, normalizeKeywordsPtBr } from "@/lib/ptbr";
 
 const DEEPSEEK_URL =
   process.env.DEEPSEEK_API_URL?.trim() || "https://api.deepseek.com/chat/completions";
@@ -23,11 +24,16 @@ const SYSTEM_PROMPT = `Você é um especialista sênior em SEO e marketing de co
 Escreve para a consultoria de Bianca Martins — Transferência de Tecnologia & Propriedade Intelectual (Brasil).
 Sua tarefa é otimizar metadados para mecanismos de busca, priorizando intenção de busca, clareza e CTR.
 
+IDIOMA (REGRA ABSOLUTA): responda estritamente em PORTUGUÊS DO BRASIL (pt-BR) — todos os campos
+(meta_title, meta_description, meta_keywords, og_title, og_description). Nunca use inglês nem
+qualquer outro idioma. Use acentuação correta. Mantenha termos técnicos consagrados do mercado
+brasileiro de PI/transferência de tecnologia (ex.: "know-how", "software", "NDA", "royalties").
+
 Regras obrigatórias:
 - meta_title: no MÁXIMO ${SEO_LIMITS.title} caracteres, com a palavra-chave principal no início, sem emojis, sem CAPS LOCK, sem aspas.
-- meta_description: no MÁXIMO ${SEO_LIMITS.description} caracteres, persuasiva, com chamada à ação implícita e idioma português do Brasil.
-- meta_keywords: de 4 a ${SEO_LIMITS.keywords} termos separados por vírgula, em minúsculas, focados em intenção de busca (long tail incluído).
-- og_title e og_description: versões para redes sociais (podem ser levemente mais comerciais).
+- meta_description: no MÁXIMO ${SEO_LIMITS.description} caracteres, persuasiva, com chamada à ação implícita e em português do Brasil.
+- meta_keywords: de 4 a ${SEO_LIMITS.keywords} termos separados por vírgula, em minúsculas, em pt-BR, focados em intenção de busca (long tail incluído).
+- og_title e og_description: versões para redes sociais (podem ser levemente mais comerciais), sempre em pt-BR.
 Não invente dados, prazos, preços, números ou credenciais que não estejam no conteúdo fornecido.
 
 Responda APENAS com um objeto JSON válido, sem texto antes ou depois, no formato:
@@ -229,20 +235,31 @@ export async function generateSeoWithAi(
 
     const str = (k: string) =>
       typeof parsed[k] === "string" ? (parsed[k] as string).trim() : "";
-    const metaTitle = clampText(str("meta_title") || fallback.meta_title!, SEO_LIMITS.title);
+
+    // Garante pt-BR em todos os campos (fallback heurístico já é pt-BR).
+    const metaTitle = clampText(
+      ensurePtBrText(str("meta_title"), fallback.meta_title!),
+      SEO_LIMITS.title
+    );
     const metaDescription = clampText(
-      str("meta_description") || fallback.meta_description!,
+      ensurePtBrText(str("meta_description"), fallback.meta_description!),
       SEO_LIMITS.description
     );
+    const metaKeywords =
+      normalizeKeywordsPtBr(str("meta_keywords"), SEO_LIMITS.keywords) ||
+      fallback.meta_keywords;
 
     return {
       seo: {
         meta_title: metaTitle,
         meta_description: metaDescription,
-        meta_keywords: str("meta_keywords") || fallback.meta_keywords,
-        og_title: clampText(str("og_title") || metaTitle, SEO_LIMITS.title),
+        meta_keywords: metaKeywords,
+        og_title: clampText(
+          ensurePtBrText(str("og_title"), metaTitle),
+          SEO_LIMITS.title
+        ),
         og_description: clampText(
-          str("og_description") || metaDescription,
+          ensurePtBrText(str("og_description"), metaDescription),
           SEO_LIMITS.description
         ),
         source: "ai",

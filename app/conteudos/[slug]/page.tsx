@@ -124,18 +124,18 @@ export default async function ArticleDetailPage({ params }: Props) {
             </div>
           )}
 
-          <div className="mt-10 max-w-3xl">
-            <RichText content={article.content} />
-          </div>
-        </div>
-
-          <div className="mb-8 border-t border-navy-800/10 pt-6">
+          {/* Compartilhamento — imediatamente abaixo da capa, antes do corpo. */}
+          <div className="mt-6 border-b border-navy-800/10 pb-6">
             <ShareBar
               title={article.title}
               url={`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/conteudos/${article.slug}`}
             />
           </div>
 
+          <div className="mt-10 max-w-3xl">
+            <RichText content={article.content} />
+          </div>
+        </div>
 
         {/* Navegação anterior/próxima */}
         <div className="container-site max-w-4xl pt-12">

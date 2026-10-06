@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Bold, ImagePlus, Italic, List, Quote, Save } from "lucide-react";
+import { Bold, ImagePlus, Italic, List, Quote, Save, Sparkles } from "lucide-react";
 import RichText from "@/components/ui/RichText";
 import SeoFields from "@/components/admin/SeoFields";
 import { createArticle, updateArticleAction, uploadCover } from "@/server/admin";
@@ -10,28 +10,62 @@ import { ARTICLE_CATEGORY_LIST } from "@/lib/constants";
 import { slugify } from "@/lib/utils";
 import { normalizeSeoMetadata } from "@/lib/seo-types";
 import type { Article } from "@/lib/types";
+import type { ArticleDraft } from "@/lib/deepseek-article";
+import { generateCoverAction } from "@/server/ai-content-admin";
 
-export default function ArticleForm({ article, isEditing = false }: { article?: Article; isEditing?: boolean }) {
+export default function ArticleForm({
+  article,
+  isEditing = false,
+  initial
+}: {
+  article?: Article;
+  isEditing?: boolean;
+  /** Rascunho pré-preenchido (ex.: gerado pela IA no painel). */
+  initial?: ArticleDraft;
+}) {
   const router = useRouter();
   const f = useRef<HTMLFormElement>(null);
   const titleR = useRef<HTMLInputElement>(null);
   const slugR = useRef<HTMLInputElement>(null);
   const sumR = useRef<HTMLTextAreaElement>(null);
   const bodyR = useRef<HTMLTextAreaElement>(null);
-  const [coverUrl, setCoverUrl] = useState(article?.cover_image_url ?? "");
+  const [coverUrl, setCoverUrl] = useState(article?.cover_image_url ?? initial?.seo.og_image ?? "");
   const [slugLock, setSlugLock] = useState(!!article?.slug);
-  const [body, setBody] = useState(article?.content ?? "");
-  const [title, setTitle] = useState(article?.title ?? "");
-  const [summary, setSummary] = useState(article?.summary ?? "");
-  const [slug, setSlug] = useState(article?.slug ?? "");
+  const [body, setBody] = useState(article?.content ?? initial?.content ?? "");
+  const [title, setTitle] = useState(article?.title ?? initial?.title ?? "");
+  const [summary, setSummary] = useState(article?.summary ?? initial?.summary ?? "");
+  const [slug, setSlug] = useState(article?.slug ?? initial?.slug ?? "");
+  const [category, setCategory] = useState<string>(
+    article?.category ?? initial?.category ?? "propriedade-intelectual"
+  );
   const [view, setView] = useState<"edit" | "pre">("edit");
   const [busy, setBusy] = useState(false);
+  const [coverBusy, setCoverBusy] = useState(false);
   const [err, setErr] = useState("");
 
   const onTitle = (v: string) => {
     setTitle(v);
     if (!slugLock) setSlug(slugify(v));
   };
+
+  // Gera uma capa profissional adaptada ao título/categoria atuais (IA + marca).
+  async function genCover() {
+    if (!title.trim()) {
+      setErr("Informe um título antes de gerar a capa.");
+      return;
+    }
+    setErr("");
+    setCoverBusy(true);
+    try {
+      const r = await generateCoverAction({ title, category });
+      if (!r.ok) setErr(r.error);
+      else setCoverUrl(r.url);
+    } catch (x) {
+      setErr(x instanceof Error ? x.message : "Falha ao gerar a capa.");
+    } finally {
+      setCoverBusy(false);
+    }
+  }
   const md = (before?: string, after?: string) => {
     const t = bodyR.current; if (!t) return;
     const { selectionStart: s, selectionEnd: e, value } = t;
@@ -109,12 +143,18 @@ export default function ArticleForm({ article, isEditing = false }: { article?: 
           />
           {/* Envia a URL da capa para o servidor (upsertArticle lê cover_image_url). */}
           <input type="hidden" name="cover_image_url" value={coverUrl} />
-          {coverUrl && <button type="button" onClick={() => setCoverUrl("")} className="mt-1 block text-xs text-red-600">remover</button>}
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <button type="button" onClick={genCover} disabled={coverBusy} className="btn-ghost inline-flex items-center gap-1.5 text-sm" title="Gera uma capa profissional adaptada ao título (IA)">
+              <Sparkles className="h-4 w-4 text-gold-600" />
+              {coverBusy ? "Gerando capa…" : "Gerar capa com IA"}
+            </button>
+            {coverUrl && <button type="button" onClick={() => setCoverUrl("")} className="text-xs text-red-600">remover</button>}
+          </div>
         </div>
       </section>
       <p><L t="Título *" /><input name="title" required className="input-field" ref={titleR} value={title} onChange={(e) => onTitle(e.target.value)} placeholder="Título do conteúdo" /></p>
       <p><L t="Slug (URL)" /><input name="slug" className="input-field" ref={slugR} value={slug} onChange={(e) => { setSlugLock(true); setSlug(e.target.value); }} /></p>
-      <p><L t="Categoria" /><select name="category" className="input-field" defaultValue={article?.category ?? "transferencia-de-tecnologia"}>{ARTICLE_CATEGORY_LIST.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></p>
+      <p><L t="Categoria" /><select name="category" className="input-field" value={category} onChange={(e) => setCategory(e.target.value)}>{ARTICLE_CATEGORY_LIST.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></p>
       <p><L t="Autor" /><input name="author" className="input-field" defaultValue={article?.author ?? "Bianca Martins"} /></p>
       <p className="flex items-center gap-2"><input name="is_published" type="checkbox" className="h-4 w-4 accent-navy-800" defaultChecked={article ? article.is_published : true} /><label className="text-sm text-navy-700">Publicado</label></p>
       <p><L t="Resumo (descrição curta)" /><textarea name="summary" rows={2} className="input-field" ref={sumR} value={summary} onChange={(e) => setSummary(e.target.value)} /></p>

@@ -13,6 +13,7 @@ import {
   Briefcase,
   Search,
   Settings,
+  Sparkles,
   SquareStack,
   X
 } from "lucide-react";
@@ -26,6 +27,7 @@ const NAV_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/dashboard": LayoutDashboard,
   "/admin/servicos": Briefcase,
   "/admin/conteudos": FileText,
+  "/admin/ia-conteudos": Sparkles,
   "/admin/seo": Search,
   "/admin/mensagens": Inbox,
   "/admin/secoes": SquareStack,
