@@ -87,7 +87,7 @@ export default function ArticleForm({
     <form ref={f} onSubmit={(e) => { e.preventDefault(); setErr(""); setBusy(true); submit().then(() => setBusy(false)).catch(() => { setBusy(false); setErr("Falha ao salvar o conteúdo."); }); }} className="space-y-5">
       {err && <p role="alert" className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</p>}
       <section className="flex flex-wrap items-center gap-5 rounded-md border border-navy-800/10 p-4">
-        <div className="relative h-32 w-52 overflow-hidden rounded-md border border-navy-800/10 bg-navy-800/10">
+        <div className="relative aspect-cover w-52 overflow-hidden rounded-md border border-navy-800/10 bg-navy-800/10">
           {coverUrl ? <Image src={coverUrl} alt="Capa" fill className="object-cover" unoptimized /> : <span className="flex h-full items-center justify-center text-sm text-navy-400">Sem capa</span>}
         </div>
         <div>

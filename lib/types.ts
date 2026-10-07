@@ -98,6 +98,35 @@ export interface ContactMessage {
   created_at: string;
 }
 
+/** Tipo de conteúdo rastreado pelo Analytics/BI. */
+export type PageViewContentType =
+  | "page"
+  | "home"
+  | "artigo"
+  | "atuacao"
+  | "contato"
+  | "international";
+
+/** Visualização de página registrada para o módulo Analytics & BI. */
+export interface PageView {
+  id: string;
+  /** Rota visitada (ex.: /conteudos/meu-artigo). */
+  path: string;
+  /** Tipo de conteúdo associado à visita. */
+  content_type: PageViewContentType;
+  /** id do artigo/serviço (quando aplicável). */
+  content_id: string | null;
+  /** slug do artigo/serviço (quando aplicável). */
+  content_slug: string | null;
+  /** Título legível do conteúdo (facilita os relatórios). */
+  content_title: string | null;
+  /** Hash anônimo do visitante (nunca o IP em texto puro). */
+  session_hash: string | null;
+  /** Host de origem (opcional). */
+  referrer: string | null;
+  created_at: string;
+}
+
 /** Identificador da tabela page_contents (cada seção/banner do site). */
 export type PageSectionKey =
   | "home_hero"
@@ -236,6 +265,16 @@ export interface Database {
             | "seo_metadata"
           >
         >;
+        Relationships: [];
+      };
+      page_views: {
+        Row: PageView;
+        Insert: Partial<
+          Omit<PageView, "id" | "created_at" | "content_type"> & {
+            content_type?: PageViewContentType;
+          }
+        >;
+        Update: Partial<PageView>;
         Relationships: [];
       };
       page_seo: {

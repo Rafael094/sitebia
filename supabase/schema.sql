@@ -125,6 +125,21 @@ create trigger trg_site_settings_updated_at
   before update on public.site_settings
   for each row execute function public.set_updated_at();
 
+-- Visualizacoes de paginas (Analytics / Business Intelligence).
+-- Dados anonimizados: guarda apenas um hash do visitante (nunca o IP).
+-- Acesso somente via service_role (servidor) — sem politicas publicas.
+create table if not exists public.page_views (
+  id            uuid        primary key default gen_random_uuid(),
+  path          text        not null,                 -- rota visitada
+  content_type  text        not null default 'page',  -- page | home | artigo | atuacao | contato | international
+  content_id    uuid,                                 -- id do artigo/servico (quando aplicavel)
+  content_slug  text,                                 -- slug do artigo/servico (quando aplicavel)
+  content_title text,                                 -- titulo legivel (relatorios)
+  session_hash  text,                                 -- hash anonimo do visitante (nunca o IP)
+  referrer      text,                                 -- origem (host) opcional
+  created_at    timestamptz not null default now()
+);
+
 -- ================================================================
 -- 5. INDICES (performance de busca por slug)
 -- ================================================================
@@ -145,6 +160,7 @@ alter table public.services         enable row level security;
 alter table public.articles         enable row level security;
 alter table public.contact_messages enable row level security;
 alter table public.site_settings    enable row level security;
+alter table public.page_views       enable row level security;
 
 
 -- SERVICES -----------------------------------------------------------------
@@ -205,6 +221,13 @@ create policy "site_settings_auth_all"
   on public.site_settings for all
   using (auth.role() = 'authenticated')
   with check (auth.role() = 'authenticated');
+
+-- PAGE_VIEWS (Analytics / BI) ------------------------------------------------
+-- PRIVACIDADE: sem politicas abertas. Somente a service_role (servidor) le e
+-- escreve (ela ignora RLS). Anonimos e usuarios autenticados ficam bloqueados.
+drop policy if exists "page_views_public_read" on public.page_views;
+drop policy if exists "page_views_anon_insert" on public.page_views;
+drop policy if exists "page_views_auth_all"    on public.page_views;
 
 -- ================================================================
 -- 7. STORAGE — Bucket de capas de artigos

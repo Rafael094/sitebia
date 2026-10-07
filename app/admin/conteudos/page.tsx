@@ -32,11 +32,11 @@ export default async function AdminConteudosPage() {
             {articles.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center gap-4 p-4 hover:bg-ivory-50">
                 {a.cover_image_url ? (
-                  <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border border-navy-800/10 bg-navy-800/5">
+                  <div className="relative aspect-cover w-24 shrink-0 overflow-hidden rounded-sm border border-navy-800/10 bg-navy-800/5">
                     <Image src={a.cover_image_url} alt="" fill className="object-cover" unoptimized />
                   </div>
                 ) : (
-                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-sm bg-navy-800/5 text-navy-300">
+                  <div className="flex aspect-cover w-24 shrink-0 items-center justify-center rounded-sm bg-navy-800/5 text-navy-300">
                     <FileText className="h-6 w-6" />
                   </div>
                 )}

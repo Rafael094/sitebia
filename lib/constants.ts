@@ -30,6 +30,7 @@ export const ADMIN_LINKS = [
   { label: "Conteúdos", href: "/admin/conteudos" },
   { label: "IA & Conteúdos", href: "/admin/ia-conteudos" },
   { label: "SEO das páginas", href: "/admin/seo" },
+  { label: "Analytics & BI", href: "/admin/analytics" },
   { label: "Mensagens", href: "/admin/mensagens" },
   { label: "Seções do site", href: "/admin/secoes" },
   { label: "Configurações", href: "/admin/configuracoes" }

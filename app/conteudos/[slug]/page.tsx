@@ -106,9 +106,9 @@ export default async function ArticleDetailPage({ params }: Props) {
             {article.summary}
           </p>
 
-          {/* Capa */}
+          {/* Capa — mantém a proporção nativa 1200×630 (sem cortes) */}
           {hasCover ? (
-            <div className="relative mt-8 aspect-[16/7] w-full overflow-hidden rounded-md bg-navy-800">
+            <div className="relative mt-8 aspect-cover w-full overflow-hidden rounded-md bg-navy-800 ring-1 ring-navy-800/10">
               <Image
                 src={article.cover_image_url}
                 alt={article.title}
@@ -119,7 +119,7 @@ export default async function ArticleDetailPage({ params }: Props) {
               />
             </div>
           ) : (
-            <div className="mx-auto mt-8 flex aspect-[16/7] w-full max-w-2xl items-center justify-center rounded-md bg-gradient-to-br from-navy-800 to-navy-700">
+            <div className="mx-auto mt-8 flex aspect-cover w-full max-w-2xl items-center justify-center rounded-md bg-gradient-to-br from-navy-800 to-navy-700">
               <span className="font-display text-4xl font-bold text-gold-400">BM</span>
             </div>
           )}

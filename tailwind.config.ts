@@ -67,6 +67,11 @@ const config: Config = {
       maxWidth: {
         container: "1200px"
       },
+      aspectRatio: {
+        // Proporção NATIVA da capa gerada automaticamente (1200x630, Open Graph).
+        // Mantém a imagem sem cortes nos cards e na página do artigo.
+        cover: "1200 / 630"
+      },
       boxShadow: {
         card: "0 12px 30px -12px rgba(13, 27, 42, 0.18)"
       },

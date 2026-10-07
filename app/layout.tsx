@@ -10,6 +10,7 @@ import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import { ContactChannelsProvider } from "@/components/site/ContactChannelsProvider";
 import { SectionsProvider } from "@/components/site/SectionsProvider";
+import PageViewTracker from "@/components/site/PageViewTracker";
 import { SITE } from "@/lib/constants";
 import { getPublicContactChannels } from "@/lib/settings";
 import { getSiteSectionMap } from "@/lib/site-content";
@@ -102,6 +103,7 @@ export default async function RootLayout({
             <WhatsAppButton />
           </ContactChannelsProvider>
         </SectionsProvider>
+        <PageViewTracker />
         <SpeedInsights />
       </body>
     </html>

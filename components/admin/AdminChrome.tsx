@@ -15,6 +15,7 @@ import {
   Settings,
   Sparkles,
   SquareStack,
+  TrendingUp,
   X
 } from "lucide-react";
 
@@ -29,6 +30,7 @@ const NAV_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/conteudos": FileText,
   "/admin/ia-conteudos": Sparkles,
   "/admin/seo": Search,
+  "/admin/analytics": TrendingUp,
   "/admin/mensagens": Inbox,
   "/admin/secoes": SquareStack,
   "/admin/configuracoes": Settings
