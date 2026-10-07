@@ -24,7 +24,7 @@ export default async function HomePage() {
   // totalmente populado, cai nas listas vazias para não quebrar a renderização.
   const [services, articles] = await Promise.all([
     getActiveServices(4).catch(() => []),
-    getPublishedArticles({ limit: 3 }).catch(() => [])
+    getPublishedArticles({ limit: 4 }).catch(() => [])
   ]);
 
   return (
