@@ -28,12 +28,14 @@ export default function LatestArticles({ articles }: { articles: Article[] }) {
           </Link>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {/* Destaque da primeira notícia ocupa 2 colunas */}
+        <div className="mt-12 grid items-stretch gap-6 md:auto-rows-fr md:grid-cols-3">
+          {/* Destaque da primeira notícia ocupa 2 colunas e 2 linhas.
+              A capa do destaque cresce para preencher a célula (sem espaço em branco). */}
           {featured && (
             <ArticleCard
               article={featured}
               priority
+              feature
               className="md:col-span-2 md:row-span-2"
             />
           )}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Facebook, Instagram, Linkedin, LinkIcon, Check, Twitter } from "lucide-react";
+
+import { absoluteSiteUrl, isLocalHostUrl, siteUrl } from "@/lib/site-url";
 
 const waIcon = (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -18,7 +19,30 @@ interface ShareProps {
 /** Barra de compartilhamento de um artigo (LinkedIn, WhatsApp, X, Facebook e copy). */
 export default function ShareBar({ title, url }: ShareProps) {
   const [copied, setCopied] = useState(false);
-  const enc = encodeURIComponent(url);
+  const [origin, setOrigin] = useState("");
+
+  // No cliente usamos `window.location.origin` como referência — mas só quando
+  // NÃO é um host local, para nunca vazar `localhost` em link público.
+  useEffect(() => {
+    const current = window.location.origin;
+    if (!isLocalHostUrl(current)) setOrigin(current.replace(/\/+$/, ""));
+  }, []);
+
+  // Prioridade: origem do navegador (produção) → URL da prop (absoluta) → env/fallback.
+  const resolvedUrl = (() => {
+    if (origin) {
+      try {
+        return new URL(url, `${origin}/`).toString();
+      } catch {
+        return `${origin}${url.startsWith("/") ? url : `/${url}`}`;
+      }
+    }
+    if (url && !isLocalHostUrl(url)) return url;
+    return absoluteSiteUrl(url || "/") || `${siteUrl()}${url?.startsWith("/") ? url : `/${url ?? ""}`}`;
+  })();
+
+  // Codificação obrigatória para não cortar parâmetros (ex.: `&`, `#`, espaços).
+  const encUrl = encodeURIComponent(resolvedUrl);
   const encTitle = encodeURIComponent(title);
 
   const links = [
@@ -26,31 +50,41 @@ export default function ShareBar({ title, url }: ShareProps) {
       key: "linkedin",
       icon: <Linkedin className="h-4 w-4" />,
       label: "LinkedIn",
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`,
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encUrl}`,
       style: "hover:bg-[#0A66C2]"
     },
     {
       key: "whatsapp",
       icon: waIcon,
       label: "WhatsApp",
-      href: `https://api.whatsapp.com/send?text=${encTitle}%20${url}`,
+      href: `https://api.whatsapp.com/send?text=${encTitle}%20${encUrl}`,
       style: "hover:bg-[#25D366]"
     },
     {
       key: "x",
       icon: <Twitter className="h-4 w-4" />,
       label: "X (Twitter)",
-      href: `https://twitter.com/intent/tweet?text=${encTitle}&url=${url}`,
+      href: `https://x.com/intent/post?text=${encTitle}&url=${encUrl}`,
       style: "hover:bg-black"
     },
     {
       key: "facebook",
       icon: <Facebook className="h-4 w-4" />,
       label: "Facebook",
-      href: `https://www.facebook.com/sharer/sharer.php?u=${enc}`,
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`,
       style: "hover:bg-[#1877F2]"
     }
   ];
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(resolvedUrl);
+    } catch {
+      /* fallback abaixo */
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -71,11 +105,7 @@ export default function ShareBar({ title, url }: ShareProps) {
       {/* Instagram trabalha via "copiar link" (usado em stories) */}
       <button
         type="button"
-        onClick={async () => {
-          try { await navigator.clipboard.writeText(url); } catch { /* fallback */ }
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1800);
-        }}
+        onClick={copyLink}
         title="Copiar link (para Instagram)"
         aria-label="Copiar link para Instagram"
         className={`inline-flex h-9 w-9 items-center justify-center gap-1 rounded-sm border border-navy-800/15 text-navy-600 hover:bg-navy-800 hover:text-white ${copied ? "!text-gold-600" : ""}`}

@@ -49,7 +49,7 @@ export default function ArticleForm({
     if (!slugLock) setSlug(slugify(v));
   };
 
-  // Gera uma capa profissional adaptada ao título/categoria atuais (IA + marca).
+  // Gera uma capa profissional adaptada ao título/categoria/tema atuais (IA + marca).
   async function genCover() {
     if (!title.trim()) {
       setErr("Informe um título antes de gerar a capa.");
@@ -58,7 +58,12 @@ export default function ArticleForm({
     setErr("");
     setCoverBusy(true);
     try {
-      const r = await generateCoverAction({ title, category });
+      // Usa o título + resumo como tema (pt-BR) para orientar a geração da imagem.
+      const imagePrompt = [title.trim(), String(summary ?? "").trim()]
+        .filter(Boolean)
+        .join(". ")
+        .slice(0, 400);
+      const r = await generateCoverAction({ title, category, imagePrompt });
       if (!r.ok) setErr(r.error);
       else setCoverUrl(r.url);
     } catch (x) {
@@ -86,7 +91,28 @@ export default function ArticleForm({
   return (
     <form ref={f} onSubmit={(e) => { e.preventDefault(); setErr(""); setBusy(true); submit().then(() => setBusy(false)).catch(() => { setBusy(false); setErr("Falha ao salvar o conteúdo."); }); }} className="space-y-5">
       {err && <p role="alert" className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</p>}
-      <section className="flex flex-wrap items-center gap-5 rounded-md border border-navy-800/10 p-4">
+      <section className="rounded-md border border-navy-800/10 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <span className="label-field mb-0">Imagem de capa</span>
+            <p className="mt-1 text-xs text-navy-500">
+              Envie uma imagem sua ou gere uma capa profissional com IA a partir do título e do tema.
+            </p>
+          </div>
+          {/* Gera a capa com IA (mesma lógica do gerador automático), logo acima da imagem. */}
+          <button
+            type="button"
+            onClick={genCover}
+            disabled={coverBusy}
+            className="btn-primary inline-flex items-center gap-1.5 text-sm"
+            title="Cria uma capa profissional (1200×630) adaptada ao título e ao tema deste conteúdo"
+          >
+            <Sparkles className="h-4 w-4" />
+            {coverBusy ? "Gerando capa…" : "Gerar capa por IA"}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-5">
         <div className="relative aspect-cover w-52 overflow-hidden rounded-md border border-navy-800/10 bg-navy-800/10">
           {coverUrl ? <Image src={coverUrl} alt="Capa" fill className="object-cover" unoptimized /> : <span className="flex h-full items-center justify-center text-sm text-navy-400">Sem capa</span>}
         </div>
@@ -115,13 +141,15 @@ export default function ArticleForm({
           />
           {/* Envia a URL da capa para o servidor (upsertArticle lê cover_image_url). */}
           <input type="hidden" name="cover_image_url" value={coverUrl} />
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={genCover} disabled={coverBusy} className="btn-ghost inline-flex items-center gap-1.5 text-sm" title="Gera uma capa profissional adaptada ao título (IA)">
-              <Sparkles className="h-4 w-4 text-gold-600" />
-              {coverBusy ? "Gerando capa…" : "Gerar capa com IA"}
-            </button>
-            {coverUrl && <button type="button" onClick={() => setCoverUrl("")} className="text-xs text-red-600">remover</button>}
+          <div className="mt-2 text-xs text-navy-500">
+            {coverUrl ? "Prévia da capa atual acima." : "Nenhuma capa definida — use «Gerar capa por IA» ou envie um arquivo."}
           </div>
+          {coverUrl && (
+            <button type="button" onClick={() => setCoverUrl("")} className="mt-2 block text-xs text-red-600">
+              Remover capa
+            </button>
+          )}
+        </div>
         </div>
       </section>
       <p><L t="Título *" /><input name="title" required className="input-field" ref={titleR} value={title} onChange={(e) => onTitle(e.target.value)} placeholder="Título do conteúdo" /></p>

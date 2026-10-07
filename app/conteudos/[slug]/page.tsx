@@ -10,6 +10,7 @@ import { ARTICLE_CATEGORIES, SITE } from "@/lib/constants";
 import { getAdjacentArticles, getPublishedArticleBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/utils";
 import { normalizeSeoMetadata } from "@/lib/seo-types";
+import { absoluteSiteUrl } from "@/lib/site-url";
 import ShareBar from "@/components/ui/ShareBar";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,8 @@ export default async function ArticleDetailPage({ params }: Props) {
     next: undefined
   }));
   const hasCover = Boolean(article.cover_image_url);
+  // URL absoluta e pública para o compartilhamento — nunca aponta p/ localhost.
+  const shareUrl = absoluteSiteUrl(`/conteudos/${article.slug}`);
 
   return (
     <>
@@ -128,7 +131,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           <div className="mt-6 border-b border-navy-800/10 pb-6">
             <ShareBar
               title={article.title}
-              url={`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/conteudos/${article.slug}`}
+              url={shareUrl}
             />
           </div>
 
