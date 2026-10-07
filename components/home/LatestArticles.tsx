@@ -70,9 +70,9 @@ export default function LatestArticles({ articles }: { articles: Article[] }) {
               <span className="inline-flex items-center rounded-sm bg-gold-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-navy-900 shadow-sm">
                 {featuredCategory.label}
               </span>
-              <h3 className="mt-3 max-w-3xl font-display text-2xl font-bold leading-tight text-ivory-100 transition-colors group-hover:text-gold-300 sm:text-3xl lg:text-4xl">
+              {/* <h3 className="mt-3 max-w-3xl font-display text-2xl font-bold leading-tight text-ivory-100 transition-colors group-hover:text-gold-300 sm:text-3xl lg:text-4xl">
                 {featured.title}
-              </h3>
+              </h3> */}
               <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ivory-100/80 sm:text-sm">
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays className="h-4 w-4 text-gold-400" />
