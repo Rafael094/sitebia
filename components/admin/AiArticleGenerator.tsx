@@ -55,12 +55,19 @@ export default function AiArticleGenerator() {
       };
       setDraft(withCoverDraft);
       setCoverUrl(r.coverUrl);
-      setNote({
-        kind: r.fromAi ? "ok" : "warn",
-        text: r.fromAi
-          ? "Conteúdo, SEO e capa gerados pela IA. Revise e ajuste antes de publicar."
-          : r.warning ?? "Conteúdo gerado localmente (IA indisponível)."
-      });
+      if (r.deduplicated) {
+        setNote({
+          kind: "warn",
+          text: `O tema gerado já existia em "${r.duplicateOf ?? "outro artigo"}". O título foi ajustado automaticamente para "${r.draft.title}" — revise antes de publicar.`
+        });
+      } else {
+        setNote({
+          kind: r.fromAi ? "ok" : "warn",
+          text: r.fromAi
+            ? "Conteúdo, SEO e capa gerados pela IA. Revise e ajuste antes de publicar."
+            : r.warning ?? "Conteúdo gerado localmente (IA indisponível)."
+        });
+      }
     } catch (x) {
       setErr(x instanceof Error ? x.message : "Falha ao gerar o conteúdo.");
     } finally {

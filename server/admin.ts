@@ -140,6 +140,31 @@ async function upsertArticle(formData: FormData, id?: string) {
 
   const admin = getAdminSupabaseClient();
 
+  // --- Anti-duplicidade (rede de segurança no servidor) --------------------
+  // O gerador com IA já evita temas repetidos, mas o formulário também aceita
+  // edição manual. Aqui impedimos gravar um artigo com título/slug idêntico ao
+  // de outro artigo já existente (excluindo o próprio, em caso de edição).
+  if (title) {
+    const { data: siblings } = await admin.from("articles").select("id, title, slug");
+    const others = (siblings ?? []).filter(
+      (a) => String((a as { id?: string }).id ?? "") !== (id ?? "")
+    );
+    const clash = others.find(
+      (a) =>
+        String((a as { slug?: string }).slug ?? "") === slug ||
+        String((a as { title?: string }).title ?? "")
+          .trim()
+          .toLowerCase() === title.toLowerCase()
+    );
+    if (clash) {
+      const clashTitle = (clash as { title?: string }).title ?? slug;
+      return {
+        ok: false,
+        error: `Já existe um artigo com este título/slug: "${clashTitle}". Ajuste o título ou o slug para evitar conteúdo duplicado.`
+      };
+    }
+  }
+
   // --- SEO editável (DeepSeek) ---------------------------------------------
   // Complementa o SEO legado (meta_description/tags) com o objeto seo_metadata
   // usado pelo <head>. Manual tem prioridade sobre a geração automática.

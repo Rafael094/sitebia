@@ -26,10 +26,17 @@ import {
 import { markdownToHtml, sanitizeRichHtml } from "@/lib/rich-html";
 import { slugify } from "@/lib/utils";
 import type { ArticleCategory } from "@/lib/types";
+import {
+  findDuplicateTitle,
+  makeUniqueTitle,
+  pickReferenceTitles
+} from "@/lib/article-dedup";
 
 const DEEPSEEK_URL =
   process.env.DEEPSEEK_API_URL?.trim() || "https://api.deepseek.com/chat/completions";
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-chat";
+/** Quantos títulos já publicados são enviados ao modelo para evitar repetição. */
+const MAX_REFERENCE_TITLES = 40;
 
 /** Instrução fixa: o "redator jurídico + SEO" do projeto. */
 const SYSTEM_PROMPT = `Você é redator sênior especializado em Propriedade Intelectual (PI), patentes, inovação e Transferência de Tecnologia, escrevendo para a consultoria de Bianca Martins (Brasil).
@@ -57,6 +64,12 @@ NORMAS DE ESCRITA (ABNT — NBR 6022/6028/10520/14724, adaptadas à web):
 
 SEO INTERNO: inclua naturalmente as palavras-chave do nicho (propriedade intelectual, patente, transferência de tecnologia, inovação, licenciamento), use <h2>/<h3> descritivos e escreva a introdução respondendo à intenção de busca. NÃO repita o título no corpo.
 
+ORIGINALIDADE (REGRA ABSOLUTA — EVITE DUPLICIDADE):
+- É TERMINANTEMENTE PROIBIDO reproduzir, parafrasear de perto ou reescrever um tema/título já existente.
+- O prompt informará uma lista de ARTIGOS JÁ PUBLICADOS. Escolha obrigatoriamente um tema, ângulo, recorte e título que NÃO coincidam (nem por sinônimos nem por variação de redação) com nenhum item dessa lista.
+- Se o tema sugerido pelo usuário já estiver coberto, aborde um ASPECTO DIFERENTE e específico dele (ex.: em vez de "Licenciamento de Patentes", escreva sobre "Cláusulas de royalties e auditoria em contratos de licenciamento de patentes").
+- O campo "title" deve ser claramente DISTINTO de todos os títulos da lista. Em caso de dúvida, prefira um título mais específico/long tail.
+
 Regras de SEO (metadados):
 - seo.meta_title: no MÁXIMO ${SEO_LIMITS.title} caracteres, palavra-chave principal no início, sem emojis/CAPS/aspas.
 - seo.meta_description: no MÁXIMO ${SEO_LIMITS.description} caracteres, persuasiva, com chamada à ação implícita.
@@ -76,6 +89,12 @@ export interface ArticleGenInput {
   category?: ArticleCategory;
   /** Público-alvo / tom desejado (opcional). */
   audience?: string;
+  /**
+   * Títulos de artigos JÁ EXISTENTES (publicados ou em rascunho).
+   * Usados para (a) instruir a IA a não repetir o tema e (b) validar o título
+   * gerado, evitando duplicidades. Ver lib/article-dedup.ts.
+   */
+  existingTitles?: string[];
 }
 
 /** Resultado pronto para pré-preencher o formulário do painel. */
@@ -98,6 +117,12 @@ export interface ArticleGenResult {
   /** `true` quando a resposta veio da API do DeepSeek. */
   fromAi: boolean;
   warning?: string;
+  /**
+   * Preenchido quando o título gerado colidiu com um artigo já existente e a
+   * unicidade só pôde ser obtida por ajuste automático do título.
+   * `null` ⇒ nenhuma duplicidade persistente (a IA acertou ou foi corrigida).
+   */
+  duplicate?: { matchedTitle: string; finalTitle: string } | null;
 }
 
 const DEFAULT_CATEGORY: ArticleCategory = "propriedade-intelectual";
@@ -191,6 +216,17 @@ export function heuristicArticle(input: ArticleGenInput): ArticleDraft {
 
 /** Monta o payload do usuário enviado ao modelo. */
 function buildUserPrompt(input: ArticleGenInput): string {
+  // Títulos já existentes: instrui a IA a NÃO repetir o tema (anti-duplicidade).
+  const referenceTitles = pickReferenceTitles(input.existingTitles ?? [], MAX_REFERENCE_TITLES);
+  const avoidBlock = referenceTitles.length
+    ? [
+        "",
+        "ARTIGOS JÁ PUBLICADOS (proibido repetir o tema/título — escolha algo novo):",
+        ...referenceTitles.map((t) => `- ${t}`),
+        "O título gerado deve ser claramente diferente de TODOS os itens acima."
+      ]
+    : [];
+
   const lines = [
     "Gere um novo artigo do nicho de Propriedade Intelectual / Transferência de Tecnologia.",
     "Formato obrigatório do campo \"content\": HTML semântico (<p>, <h2>, <h3>, <strong>, <em>, <ul>/<ol>/<li>, <blockquote>), sem Markdown e sem quebras de linha para separar blocos.",
@@ -199,25 +235,68 @@ function buildUserPrompt(input: ArticleGenInput): string {
       ? `Tema/ideia sugerida (priorize este rumo): ${toPlainText(input.topic).slice(0, 300)}`
       : "Sem tema definido: escolha um tema ATUAL e relevante do nicho (ex.: patenteabilidade de software/IA, contratos de licenciamento, NDA em P&D, transferência universidade-empresa, marcas e proteção de dados).",
     input.category ? `Categoria desejada: ${input.category}` : "",
-    input.audience?.trim() ? `Público-alvo: ${toPlainText(input.audience).slice(0, 200)}` : ""
+    input.audience?.trim() ? `Público-alvo: ${toPlainText(input.audience).slice(0, 200)}` : "",
+    ...avoidBlock
   ].filter(Boolean);
   return lines.join("\n");
+}
+
+/** Executa UMA chamada ao DeepSeek e devolve o JSON já parseado (ou null). */
+async function callDeepSeek(
+  input: ArticleGenInput,
+  apiKey: string,
+  signal: AbortSignal,
+  extraInstruction?: string
+): Promise<Record<string, unknown> | null> {
+  const userPrompt = extraInstruction
+    ? `${buildUserPrompt(input)}\n\nCORREÇÃO OBRIGATÓRIA: ${extraInstruction}`
+    : buildUserPrompt(input);
+
+  const res = await fetch(DEEPSEEK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: DEEPSEEK_MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.75,
+      max_tokens: 4000,
+      response_format: { type: "json_object" },
+      stream: false
+    }),
+    signal,
+    cache: "no-store"
+  });
+
+  if (!res.ok) return null;
+  const payload = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return parseJsonLoose(payload.choices?.[0]?.message?.content ?? "");
 }
 
 /**
  * Gera um artigo completo (texto + SEO + prompt de capa) via DeepSeek.
  * Sempre devolve um `ArticleDraft` válido (fallback local se a IA falhar).
+ * Quando `input.existingTitles` é informado, o título gerado passa por uma
+ * validação anti-duplicidade (com uma nova tentativa e ajuste final do título).
  */
 export async function generateArticleWithAi(
   input: ArticleGenInput,
   signal?: AbortSignal
 ): Promise<ArticleGenResult> {
   const fallback = heuristicArticle(input);
+  const existingTitles = (input.existingTitles ?? []).filter(Boolean);
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
 
   if (!apiKey) {
     return {
-      draft: fallback,
+      draft: guardAgainstDuplicate(fallback, existingTitles),
       fromAi: false,
       warning: "DEEPSEEK_API_KEY não configurada — artigo gerado por modelo local."
     };
@@ -228,48 +307,37 @@ export async function generateArticleWithAi(
   signal?.addEventListener("abort", () => controller.abort(), { once: true });
 
   try {
-    const res = await fetch(DEEPSEEK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: buildUserPrompt(input) }
-        ],
-        temperature: 0.75,
-        max_tokens: 4000,
-        response_format: { type: "json_object" },
-        stream: false
-      }),
-      signal: controller.signal,
-      cache: "no-store"
-    });
-
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      return {
-        draft: fallback,
-        fromAi: false,
-        warning: `DeepSeek respondeu ${res.status}. ${detail.slice(0, 180)}`.trim()
-      };
-    }
-
-    const payload = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const content = payload.choices?.[0]?.message?.content ?? "";
-    const parsed = parseJsonLoose(content);
+    let parsed = await callDeepSeek(input, apiKey, controller.signal);
 
     if (!parsed) {
       return {
-        draft: fallback,
+        draft: guardAgainstDuplicate(fallback, existingTitles),
         fromAi: false,
         warning: "Resposta da IA não pôde ser interpretada — usando modelo local."
       };
+    }
+
+    const readTitle = (obj: Record<string, unknown>) =>
+      clampText(ensurePtBrText(typeof obj.title === "string" ? obj.title : "", ""), 120);
+
+    // 1ª validação: se o título repetir um artigo existente, pede uma NOVA
+    // tentativa à IA, reforçando explicitamente o título que deve ser evitado.
+    let aiTitle = readTitle(parsed);
+    let repeated = findDuplicateTitle(aiTitle, existingTitles);
+    if (repeated) {
+      const retry = await callDeepSeek(
+        input,
+        apiKey,
+        controller.signal,
+        `O título "${aiTitle}" repete o tema do artigo já existente "${repeated.title}". ` +
+          "Gere um artigo sobre um TEMA DIFERENTE e devolva um título claramente distinto."
+      );
+      const retryTitle = retry ? readTitle(retry) : "";
+      // Só aceita a nova tentativa se realmente resolveu a colisão.
+      if (retry && retryTitle && !findDuplicateTitle(retryTitle, existingTitles)) {
+        parsed = retry;
+        repeated = null;
+      }
     }
 
     const str = (k: string) =>
@@ -283,7 +351,16 @@ export async function generateArticleWithAi(
     // Garante pt-BR em todos os campos textuais vindos da IA, caindo para o
     // fallback (heurístico, já 100% pt-BR) sempre que um campo sair vazio ou
     // aparentar estar em outro idioma (ver lib/ptbr.ts).
-    const title = clampText(ensurePtBrText(str("title"), fallback.title), 120);
+    // 2ª validação (último recurso): se a IA insistiu no tema repetido, ajusta
+    // o título para uma variação única — nunca gravamos um título duplicado.
+    let title = clampText(ensurePtBrText(str("title"), fallback.title), 120);
+    let duplicate: { matchedTitle: string; finalTitle: string } | null = null;
+    if (existingTitles.length && findDuplicateTitle(title, existingTitles)) {
+      const matched = repeated?.title ?? title;
+      const unique = makeUniqueTitle(title, existingTitles);
+      duplicate = { matchedTitle: matched, finalTitle: unique };
+      title = unique;
+    }
     const category = coerceCategory(parsed.category, input.category ?? fallback.category);
     const summary = clampText(ensurePtBrText(str("summary"), fallback.summary), 200);
     // Corpo: garante pt-BR e converte/sanitiza para HTML semântico (ABNT).
@@ -331,12 +408,13 @@ export async function generateArticleWithAi(
         },
         image_prompt: imagePrompt || fallback.image_prompt
       },
-      fromAi: true
+      fromAi: true,
+      duplicate
     };
   } catch (error) {
     const aborted = error instanceof Error && error.name === "AbortError";
     return {
-      draft: fallback,
+      draft: guardAgainstDuplicate(fallback, existingTitles),
       fromAi: false,
       warning: aborted
         ? "A geração por IA excedeu o tempo limite — usando modelo local."
@@ -345,6 +423,17 @@ export async function generateArticleWithAi(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/**
+ * Rede de segurança para os caminhos de fallback (sem IA): garante que o título
+ * do rascunho local não colida com um artigo já existente.
+ */
+function guardAgainstDuplicate(draft: ArticleDraft, existingTitles: string[]): ArticleDraft {
+  if (!existingTitles.length) return draft;
+  if (!findDuplicateTitle(draft.title, existingTitles)) return draft;
+  const unique = makeUniqueTitle(draft.title, existingTitles);
+  return { ...draft, title: unique, slug: slugify(unique) };
 }
 
 

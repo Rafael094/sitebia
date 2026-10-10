@@ -12,6 +12,7 @@ import { generateArticleWithAi, type ArticleDraft } from "@/lib/deepseek-article
 import { generateCoverImage } from "@/lib/cover-image";
 import { keywordsPtBrToArray, normalizeSpaces } from "@/lib/ptbr";
 import { slugify } from "@/lib/utils";
+import { getAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { ArticleCategory } from "@/lib/types";
 import { ARTICLE_CATEGORIES } from "@/lib/constants";
 
@@ -37,6 +38,13 @@ export type GenerateArticleResult =
       coverUrl: string;
       coverFromExternal: boolean;
       coverWarning?: string;
+      /**
+       * `true` quando o título gerado colidiu com um artigo existente e foi
+       * ajustado automaticamente para não duplicar o tema.
+       */
+      deduplicated?: boolean;
+      /** Título do artigo existente que originou o ajuste (quando aplicável). */
+      duplicateOf?: string;
     }
   | { ok: false; error: string };
 
@@ -44,6 +52,29 @@ export type GenerateArticleResult =
 function coerceCategory(value?: string): ArticleCategory | undefined {
   const raw = String(value ?? "").trim() as ArticleCategory;
   return raw in ARTICLE_CATEGORIES ? raw : undefined;
+}
+
+/**
+ * Carrega os títulos (e slugs) dos artigos já cadastrados — publicados ou em
+ * rascunho — para servir de referência anti-duplicidade na geração.
+ * Nunca lança: se o banco falhar, devolve lista vazia e a geração segue.
+ */
+async function loadExistingArticleTitles(): Promise<string[]> {
+  try {
+    const admin = getAdminSupabaseClient();
+    const { data } = await admin
+      .from("articles")
+      .select("title, slug")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    return (data ?? [])
+      .map((a) => String((a as { title?: string }).title ?? "").trim())
+      .filter(Boolean);
+  } catch {
+    // Sem banco/chave, seguimos sem referências (a validação de duplicidade
+    // ainda protege contra colisões dentro do próprio lote gerado).
+    return [];
+  }
 }
 
 /**
@@ -55,10 +86,14 @@ export async function generateArticleDraftAction(
   payload: GenerateArticlePayload
 ): Promise<GenerateArticleResult> {
   try {
-    const { draft, fromAi, warning } = await generateArticleWithAi({
+    // Referência anti-duplicidade: títulos já cadastrados (publicados/rascunhos).
+    const existingTitles = await loadExistingArticleTitles();
+
+    const { draft, fromAi, warning, duplicate } = await generateArticleWithAi({
       topic: payload?.topic,
       category: coerceCategory(payload?.category),
-      audience: payload?.audience
+      audience: payload?.audience,
+      existingTitles
     });
 
     // Garante slug e tags mesmo no caminho heurístico (tudo em pt-BR).
@@ -97,7 +132,9 @@ export async function generateArticleDraftAction(
       warning,
       coverUrl,
       coverFromExternal,
-      coverWarning
+      coverWarning,
+      deduplicated: Boolean(duplicate),
+      duplicateOf: duplicate?.matchedTitle
     };
   } catch (error) {
     return {
