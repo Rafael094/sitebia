@@ -15,6 +15,7 @@ import {
   Settings,
   Sparkles,
   SquareStack,
+  Tags,
   TrendingUp,
   X
 } from "lucide-react";
@@ -28,6 +29,7 @@ const NAV_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/dashboard": LayoutDashboard,
   "/admin/servicos": Briefcase,
   "/admin/conteudos": FileText,
+  "/admin/conteudos/categorias": Tags,
   "/admin/ia-conteudos": Sparkles,
   "/admin/seo": Search,
   "/admin/analytics": TrendingUp,
@@ -90,8 +92,13 @@ export default function AdminChrome({
           </p>
           {ADMIN_LINKS.map((l) => {
             const Icon = NAV_ICONS[l.href] ?? LayoutDashboard;
+            // "Conteúdos" não fica ativo quando estamos na subpágina Categorias.
+            const isCategoriesPage =
+              l.href === "/admin/conteudos" &&
+              Boolean(pathname?.startsWith("/admin/conteudos/categorias"));
             const active =
-              pathname === l.href || pathname?.startsWith(l.href + "/");
+              pathname === l.href ||
+              (pathname?.startsWith(l.href + "/") && !isCategoriesPage);
             return (
               <Link
                 key={l.href}

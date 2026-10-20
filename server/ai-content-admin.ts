@@ -13,8 +13,10 @@ import { generateCoverImage } from "@/lib/cover-image";
 import { keywordsPtBrToArray, normalizeSpaces } from "@/lib/ptbr";
 import { slugify } from "@/lib/utils";
 import { getAdminSupabaseClient } from "@/lib/supabase/admin";
-import type { ArticleCategory } from "@/lib/types";
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { getAdminActiveCategoriesSafe } from "@/lib/article-categories-data";
+import { DEFAULT_ARTICLE_CATEGORIES } from "@/lib/constants";
+import type { ArticleCategory, ArticleCategoryRecord } from "@/lib/types";
 
 /** Campos aceitos no pedido de geração. */
 export interface GenerateArticlePayload {
@@ -48,10 +50,14 @@ export type GenerateArticleResult =
     }
   | { ok: false; error: string };
 
-/** Valida a categoria vinda do painel (aceita apenas valores do enum). */
-function coerceCategory(value?: string): ArticleCategory | undefined {
-  const raw = String(value ?? "").trim() as ArticleCategory;
-  return raw in ARTICLE_CATEGORIES ? raw : undefined;
+/** Valida a categoria vinda do painel contra as categorias cadastradas. */
+function coerceCategory(
+  value: string | undefined,
+  categories: ArticleCategoryRecord[]
+): ArticleCategory | undefined {
+  const raw = String(value ?? "").trim();
+  if (!raw) return undefined;
+  return categories.some((category) => category.slug === raw) ? raw : undefined;
 }
 
 /**
@@ -87,11 +93,15 @@ export async function generateArticleDraftAction(
 ): Promise<GenerateArticleResult> {
   try {
     // Referência anti-duplicidade: títulos já cadastrados (publicados/rascunhos).
-    const existingTitles = await loadExistingArticleTitles();
+    const [existingTitles, categories] = await Promise.all([
+      loadExistingArticleTitles(),
+      getAdminActiveCategoriesSafe()
+    ]);
 
     const { draft, fromAi, warning, duplicate } = await generateArticleWithAi({
       topic: payload?.topic,
-      category: coerceCategory(payload?.category),
+      category: coerceCategory(payload?.category, categories),
+      categories,
       audience: payload?.audience,
       existingTitles
     });
@@ -161,11 +171,17 @@ export async function generateCoverAction(payload: {
   if (!title) {
     return { ok: false, error: "Informe um título antes de gerar a capa." };
   }
-  const category = coerceCategory(payload?.category) ?? "propriedade-intelectual";
+
+  const categories = await getAdminActiveCategoriesSafe();
+  const category =
+    coerceCategory(payload?.category, categories) ??
+    categories[0]?.slug ??
+    DEFAULT_ARTICLE_CATEGORIES[0].slug;
 
   const cover = await generateCoverImage({
     title,
     category,
+    categoryLabel: categoryLabelFor(category, categories),
     imagePrompt: payload?.imagePrompt
   });
 

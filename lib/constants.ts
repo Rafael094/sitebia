@@ -1,4 +1,4 @@
-import type { ArticleCategory, SiteContactLinks } from "@/lib/types";
+import type { ArticleCategoryRecord, SiteContactLinks } from "@/lib/types";
 
 // ============================================================================
 // Constantes globais de configuração do site
@@ -28,6 +28,7 @@ export const ADMIN_LINKS = [
   { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Serviços", href: "/admin/servicos" },
   { label: "Conteúdos", href: "/admin/conteudos" },
+  { label: "Categorias", href: "/admin/conteudos/categorias" },
   { label: "IA & Conteúdos", href: "/admin/ia-conteudos" },
   { label: "SEO das páginas", href: "/admin/seo" },
   { label: "Analytics & BI", href: "/admin/analytics" },
@@ -36,29 +37,43 @@ export const ADMIN_LINKS = [
   { label: "Configurações", href: "/admin/configuracoes" }
 ] as const;
 
-/** Categorias de artigos (rótulo de exibição + valor usado no slug/SQL). */
-export const ARTICLE_CATEGORIES: Record<
-  ArticleCategory,
-  { label: string; description: string }
-> = {
-  "transferencia-de-tecnologia": {
+/**
+ * Categorias padrão usadas como fallback enquanto a migração v10 não foi
+ * aplicada (ou se o banco estiver indisponível). Depois da migração, o painel
+ * /admin/conteudos/categorias passa a ser a fonte oficial.
+ */
+export const DEFAULT_ARTICLE_CATEGORIES: ArticleCategoryRecord[] = [
+  {
+    id: "default-transferencia-de-tecnologia",
+    slug: "transferencia-de-tecnologia",
     label: "Transferência de Tecnologia",
-    description: "Licenciamento, cessão e inovação aberta."
+    description: "Licenciamento, cessão e inovação aberta.",
+    order_index: 10,
+    is_active: true,
+    created_at: "",
+    updated_at: ""
   },
-  "propriedade-intelectual": {
+  {
+    id: "default-propriedade-intelectual",
+    slug: "propriedade-intelectual",
     label: "Propriedade Intelectual",
-    description: "Patentes, marcas, direitos autorais e segredos."
+    description: "Patentes, marcas, direitos autorais e segredos.",
+    order_index: 20,
+    is_active: true,
+    created_at: "",
+    updated_at: ""
   },
-  "contratos-e-parcerias": {
+  {
+    id: "default-contratos-e-parcerias",
+    slug: "contratos-e-parcerias",
     label: "Contratos & Parcerias",
-    description: "Acordos, codesenvolvimento e parcerias de P&D."
+    description: "Acordos, codesenvolvimento e parcerias de P&D.",
+    order_index: 30,
+    is_active: true,
+    created_at: "",
+    updated_at: ""
   }
-};
-
-/** Lista auxiliar no formato ordenável para menus/selects. */
-export const ARTICLE_CATEGORY_LIST = Object.entries(ARTICLE_CATEGORIES).map(
-  ([value, { label, description }]) => ({ value: value as ArticleCategory, label, description })
-);
+];
 
 /** Canais de contato padrão (usados enquanto o painel não salvar outra). */
 export const DEFAULT_CONTACT_CHANNELS: SiteContactLinks = {

@@ -143,7 +143,13 @@ migrations_v5_international.sql
 migrations_v6_home_about.sql
 migrations_v7_seo_metadata.sql
 migrations_v8_page_seo.sql
+migrations_v9_analytics.sql
+migrations_v10_article_categories.sql
 ```
+
+> A migração **v10** cria as categorias editáveis em
+> `/admin/conteudos/categorias`. Sem ela, o site continua funcionando com as
+> três categorias padrão, mas o painel não consegue salvar alterações.
 
 ### 4. (Opcional) Sincronização por cron
 

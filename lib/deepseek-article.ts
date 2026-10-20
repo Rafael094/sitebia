@@ -15,7 +15,8 @@
 // continua funcionando (nunca quebra). Mesmo padrão de lib/deepseek.ts.
 // ============================================================================
 
-import { ARTICLE_CATEGORY_LIST, ARTICLE_CATEGORIES } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { DEFAULT_ARTICLE_CATEGORIES } from "@/lib/constants";
 import { parseJsonLoose, SEO_LIMITS, type SeoMetadata } from "@/lib/seo-types";
 import { clampText, toPlainText } from "@/lib/deepseek";
 import {
@@ -25,7 +26,7 @@ import {
 } from "@/lib/ptbr";
 import { markdownToHtml, sanitizeRichHtml } from "@/lib/rich-html";
 import { slugify } from "@/lib/utils";
-import type { ArticleCategory } from "@/lib/types";
+import type { ArticleCategory, ArticleCategoryRecord } from "@/lib/types";
 import {
   findDuplicateTitle,
   makeUniqueTitle,
@@ -76,7 +77,7 @@ Regras de SEO (metadados):
 - seo.meta_keywords: 4 a ${SEO_LIMITS.keywords} termos separados por vírgula, minúsculos, com long tail.
 - seo.og_title / seo.og_description: versões para redes sociais.
 - image_prompt: descrição EM PORTUGUÊS DO BRASIL (1 a 2 frases) para gerar uma capa profissional e abstrata sobre o tema. Texto na imagem, se houver, em pt-BR. Sem logos, estilo corporativo/jurídico/tecnológico, tons sóbrios (azul-marinho e dourado).
-- category: um destes valores exatos: ${ARTICLE_CATEGORY_LIST.map((c) => `"${c.value}"`).join(", ")}.
+- category: use exatamente um dos slugs de categoria informados no pedido do usuário.
 
 Responda APENAS com um JSON válido (sem texto antes/depois). O campo "content" deve conter o HTML semântico completo:
 {\"title\":\"...\",\"summary\":\"...\",\"category\":\"...\",\"content\":\"<p>...</p><h2>...</h2><p>...</p><h3>...</h3><ul><li>...</li></ul><h2>Conclusão</h2><p>...</p>\",\"seo\":{\"meta_title\":\"...\",\"meta_description\":\"...\",\"meta_keywords\":\"...\",\"og_title\":\"...\",\"og_description\":\"...\"},\"image_prompt\":\"...\"}`;
@@ -87,6 +88,8 @@ export interface ArticleGenInput {
   topic?: string;
   /** Categoria desejada (opcional — a IA decide se vazio). */
   category?: ArticleCategory;
+  /** Categorias editáveis disponíveis (slug + rótulo). */
+  categories?: ArticleCategoryRecord[];
   /** Público-alvo / tom desejado (opcional). */
   audience?: string;
   /**
@@ -125,7 +128,15 @@ export interface ArticleGenResult {
   duplicate?: { matchedTitle: string; finalTitle: string } | null;
 }
 
-const DEFAULT_CATEGORY: ArticleCategory = "propriedade-intelectual";
+/** Categorias usáveis: ativas primeiro; se não houver, todas; senão, padrões. */
+function normalizeCategories(
+  categories?: ArticleCategoryRecord[]
+): ArticleCategoryRecord[] {
+  const list = categories?.length ? categories : DEFAULT_ARTICLE_CATEGORIES;
+  const active = list.filter((category) => category.is_active);
+  return active.length ? active : list;
+}
+
 /**
  * Normaliza o corpo gerado pela IA para HTML semântico seguro (CKEditor 5).
  * Degrada com elegância: se a IA devolver Markdown por engano, converte para
@@ -147,10 +158,14 @@ function wrapIfPlain(html: string): string {
   return /<(p|h2|h3|ul|ol|blockquote)\b/i.test(src) ? src : `<p>${src}</p>`;
 }
 
-/** Normaliza a categoria devolvida pela IA para um valor válido do enum. */
-function coerceCategory(value: unknown, fallback: ArticleCategory): ArticleCategory {
-  const raw = String(value ?? "").trim() as ArticleCategory;
-  return raw in ARTICLE_CATEGORIES ? raw : fallback;
+/** Normaliza a categoria devolvida pela IA para um slug existente no painel. */
+function coerceCategory(
+  value: unknown,
+  fallback: ArticleCategory,
+  categories: ArticleCategoryRecord[]
+): ArticleCategory {
+  const raw = String(value ?? "").trim();
+  return categories.some((category) => category.slug === raw) ? raw : fallback;
 }
 
 /** Divide keywords em lista enxuta (tags), garantindo pt-BR e sem duplicatas. */
@@ -166,8 +181,13 @@ export function heuristicArticle(input: ArticleGenInput): ArticleDraft {
   const topic =
     toPlainText(input.topic || "") ||
     "Propriedade Intelectual e Transferência de Tecnologia na prática";
-  const category = coerceCategory(input.category, DEFAULT_CATEGORY);
-  const catLabel = ARTICLE_CATEGORIES[category].label;
+  const categories = normalizeCategories(input.categories);
+  const fallbackCategory =
+    categories.find((item) => item.is_active)?.slug ??
+    categories[0]?.slug ??
+    "propriedade-intelectual";
+  const category = coerceCategory(input.category, fallbackCategory, categories);
+  const catLabel = categoryLabelFor(category, categories);
 
   const title = clampText(topic, SEO_LIMITS.title);
   const content = [
@@ -234,6 +254,11 @@ function buildUserPrompt(input: ArticleGenInput): string {
     input.topic?.trim()
       ? `Tema/ideia sugerida (priorize este rumo): ${toPlainText(input.topic).slice(0, 300)}`
       : "Sem tema definido: escolha um tema ATUAL e relevante do nicho (ex.: patenteabilidade de software/IA, contratos de licenciamento, NDA em P&D, transferência universidade-empresa, marcas e proteção de dados).",
+    `Categorias disponíveis (use exatamente um destes slugs): ${normalizeCategories(
+      input.categories
+    )
+      .map((category) => `"${category.slug}" (${category.label})`)
+      .join(", ")}.`,
     input.category ? `Categoria desejada: ${input.category}` : "",
     input.audience?.trim() ? `Público-alvo: ${toPlainText(input.audience).slice(0, 200)}` : "",
     ...avoidBlock
@@ -290,7 +315,9 @@ export async function generateArticleWithAi(
   input: ArticleGenInput,
   signal?: AbortSignal
 ): Promise<ArticleGenResult> {
-  const fallback = heuristicArticle(input);
+  const categories = normalizeCategories(input.categories);
+  const inputWithCategories: ArticleGenInput = { ...input, categories };
+  const fallback = heuristicArticle(inputWithCategories);
   const existingTitles = (input.existingTitles ?? []).filter(Boolean);
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
 
@@ -307,7 +334,7 @@ export async function generateArticleWithAi(
   signal?.addEventListener("abort", () => controller.abort(), { once: true });
 
   try {
-    let parsed = await callDeepSeek(input, apiKey, controller.signal);
+    let parsed = await callDeepSeek(inputWithCategories, apiKey, controller.signal);
 
     if (!parsed) {
       return {
@@ -326,7 +353,7 @@ export async function generateArticleWithAi(
     let repeated = findDuplicateTitle(aiTitle, existingTitles);
     if (repeated) {
       const retry = await callDeepSeek(
-        input,
+        inputWithCategories,
         apiKey,
         controller.signal,
         `O título "${aiTitle}" repete o tema do artigo já existente "${repeated.title}". ` +
@@ -361,7 +388,11 @@ export async function generateArticleWithAi(
       duplicate = { matchedTitle: matched, finalTitle: unique };
       title = unique;
     }
-    const category = coerceCategory(parsed.category, input.category ?? fallback.category);
+    const category = coerceCategory(
+      parsed.category,
+      input.category ?? fallback.category,
+      categories
+    );
     const summary = clampText(ensurePtBrText(str("summary"), fallback.summary), 200);
     // Corpo: garante pt-BR e converte/sanitiza para HTML semântico (ABNT).
     const bodyRaw = ensurePtBrText(str("content"), fallback.content) || fallback.content;

@@ -11,7 +11,8 @@ import {
 
 import { getDashboardMetrics } from "@/server/admin-data";
 import { formatDate, cn } from "@/lib/utils";
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { getAdminCategoriesSafe } from "@/lib/article-categories-data";
 import { getCurrentUser } from "@/server/auth";
 
 export const metadata: Metadata = {
@@ -22,7 +23,10 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser().catch(() => null);
-  const m = await getDashboardMetrics().catch(() => null);
+  const [m, categories] = await Promise.all([
+    getDashboardMetrics().catch(() => null),
+    getAdminCategoriesSafe()
+  ]);
 
   if (!user) {
     return <div className="card p-8 text-sm text-navy-600">Sessão não identificada. Redirecionando…</div>;
@@ -132,7 +136,7 @@ export default async function DashboardPage() {
                       </span>
                     </p>
                     <p className="mt-0.5 text-xs text-navy-400">
-                      {ARTICLE_CATEGORIES[a.category].label} · {formatDate(a.created_at)}
+                      {categoryLabelFor(a.category, categories)} · {formatDate(a.created_at)}
                     </p>
                   </Link>
                 </li>

@@ -6,23 +6,27 @@ import { ImagePlus, Save, Sparkles } from "lucide-react";
 import RichTextField from "@/components/admin/RichTextField";
 import SeoFields from "@/components/admin/SeoFields";
 import { createArticle, updateArticleAction, uploadCover } from "@/server/admin";
-import { ARTICLE_CATEGORY_LIST } from "@/lib/constants";
+import { humanizeCategorySlug } from "@/lib/article-categories";
+import { DEFAULT_ARTICLE_CATEGORIES } from "@/lib/constants";
 import { slugify } from "@/lib/utils";
 import { normalizeSeoMetadata } from "@/lib/seo-types";
 import { markdownToHtml } from "@/lib/rich-html";
-import type { Article } from "@/lib/types";
+import type { Article, ArticleCategoryRecord } from "@/lib/types";
 import type { ArticleDraft } from "@/lib/deepseek-article";
 import { generateCoverAction } from "@/server/ai-content-admin";
 
 export default function ArticleForm({
   article,
   isEditing = false,
-  initial
+  initial,
+  categories = []
 }: {
   article?: Article;
   isEditing?: boolean;
   /** Rascunho pré-preenchido (ex.: gerado pela IA no painel). */
   initial?: ArticleDraft;
+  /** Categorias editáveis carregadas pelo servidor. */
+  categories?: ArticleCategoryRecord[];
 }) {
   const router = useRouter();
   const f = useRef<HTMLFormElement>(null);
@@ -37,9 +41,20 @@ export default function ArticleForm({
   const [title, setTitle] = useState(article?.title ?? initial?.title ?? "");
   const [summary, setSummary] = useState(article?.summary ?? initial?.summary ?? "");
   const [slug, setSlug] = useState(article?.slug ?? initial?.slug ?? "");
-  const [category, setCategory] = useState<string>(
-    article?.category ?? initial?.category ?? "propriedade-intelectual"
+
+  // Categorias vindas do banco (o fallback cobre a migração ainda não aplicada).
+  const allCategories = categories.length ? categories : DEFAULT_ARTICLE_CATEGORIES;
+  const currentCategory = article?.category ?? initial?.category ?? "";
+  const visibleCategories = allCategories.filter(
+    (item) => item.is_active || item.slug === currentCategory
   );
+  const categoryOptions = visibleCategories.length ? visibleCategories : allCategories;
+  const defaultCategory =
+    categoryOptions.find((item) => item.is_active)?.slug ??
+    categoryOptions[0]?.slug ??
+    "propriedade-intelectual";
+
+  const [category, setCategory] = useState<string>(currentCategory || defaultCategory);
   const [busy, setBusy] = useState(false);
   const [coverBusy, setCoverBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -154,7 +169,28 @@ export default function ArticleForm({
       </section>
       <p><L t="Título *" /><input name="title" required className="input-field" ref={titleR} value={title} onChange={(e) => onTitle(e.target.value)} placeholder="Título do conteúdo" /></p>
       <p><L t="Slug (URL)" /><input name="slug" className="input-field" ref={slugR} value={slug} onChange={(e) => { setSlugLock(true); setSlug(e.target.value); }} /></p>
-      <p><L t="Categoria" /><select name="category" className="input-field" value={category} onChange={(e) => setCategory(e.target.value)}>{ARTICLE_CATEGORY_LIST.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></p>
+      <p>
+        <L t="Categoria" />
+        <select
+          name="category"
+          className="input-field"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          {!categoryOptions.some((item) => item.slug === category) && category && (
+            <option value={category}>{humanizeCategorySlug(category)}</option>
+          )}
+          {categoryOptions.map((item) => (
+            <option key={item.id || item.slug} value={item.slug}>
+              {item.label}
+              {!item.is_active ? " (inativa)" : ""}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs text-navy-400">
+          As categorias são editáveis em Conteúdos → Categorias.
+        </span>
+      </p>
       <p><L t="Autor" /><input name="author" className="input-field" defaultValue={article?.author ?? "Bianca Martins"} /></p>
       <p className="flex items-center gap-2"><input name="is_published" type="checkbox" className="h-4 w-4 accent-navy-800" defaultChecked={article ? article.is_published : true} /><label className="text-sm text-navy-700">Publicado</label></p>
       <p><L t="Resumo (descrição curta)" /><textarea name="summary" rows={2} className="input-field" ref={sumR} value={summary} onChange={(e) => setSummary(e.target.value)} /></p>

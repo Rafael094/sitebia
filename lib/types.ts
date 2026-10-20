@@ -37,11 +37,23 @@ export interface ContactRateLimit {
   count: number;
 }
 
-/** Categorias permitidas para os artigos/conteúdos. */
-export type ArticleCategory =
-  | "transferencia-de-tecnologia"
-  | "propriedade-intelectual"
-  | "contratos-e-parcerias";
+/**
+ * Identificador (slug) da categoria do artigo. Agora é texto livre porque as
+ * categorias passam a ser cadastradas/editadas pelo painel.
+ */
+export type ArticleCategory = string;
+
+/** Categoria de conteúdo editável no painel (/admin/conteudos/categorias). */
+export interface ArticleCategoryRecord {
+  id: string;
+  slug: string;
+  label: string;
+  description: string;
+  order_index: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Service {
   id: string;
@@ -190,6 +202,15 @@ export interface Database {
         Row: Service;
         Insert: Partial<Omit<Service, "id" | "created_at" | "updated_at">>;
         Update: Partial<Omit<Service, "id" | "created_at" | "updated_at">>;
+        Relationships: [];
+      };
+      article_categories: {
+        Row: ArticleCategoryRecord;
+        Insert: Partial<Omit<ArticleCategoryRecord, "id" | "created_at" | "updated_at">> & {
+          slug: string;
+          label: string;
+        };
+        Update: Partial<Omit<ArticleCategoryRecord, "id" | "created_at" | "updated_at">>;
         Relationships: [];
       };
       articles: {

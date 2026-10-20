@@ -30,6 +30,7 @@ export default function IntlContactForm() {
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
+  const [deliveryIssue, setDeliveryIssue] = useState<string | null>(null);
 
   function resetCaptcha() {
     setCaptchaToken(null);
@@ -39,6 +40,7 @@ export default function IntlContactForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setDeliveryIssue(null);
 
     if (IS_RECAPTCHA_ENABLED && !captchaToken) {
       setError("Please confirm the reCAPTCHA (“I’m not a robot”) to send.");
@@ -87,7 +89,11 @@ export default function IntlContactForm() {
       });
 
       const data = (await res.json().catch(() => null)) as
-        | { ok: boolean; error?: string | null }
+        | {
+            ok: boolean;
+            error?: string | null;
+            email?: { attempted: boolean; delivered: boolean } | null;
+          }
         | null;
 
       if (res.status === 429 || !res.ok || !data?.ok) {
@@ -97,6 +103,11 @@ export default function IntlContactForm() {
         // reCAPTCHA tokens are single-use: request a fresh one after failures.
         resetCaptcha();
         return;
+      }
+      if (data.email && !data.email.delivered) {
+        setDeliveryIssue(
+          "Your message was saved, but the automatic e-mail could not be delivered. It is registered in the admin panel and the team will see it."
+        );
       }
       setSent(true);
       form.reset();
@@ -120,6 +131,14 @@ export default function IntlContactForm() {
           Thank you for reaching out. Your message has been registered and we
           will get back to you as soon as possible.
         </p>
+        {deliveryIssue && (
+          <p
+            role="status"
+            className="mx-auto mt-4 max-w-sm rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900"
+          >
+            {deliveryIssue}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => setSent(false)}

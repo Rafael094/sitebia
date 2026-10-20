@@ -6,8 +6,13 @@ import { ArrowLeft, ArrowRight, CalendarDays, UserRound } from "lucide-react";
 
 import HtmlContent from "@/components/ui/HtmlContent";
 import CtaBanner from "@/components/ui/CtaBanner";
-import { ARTICLE_CATEGORIES, SITE } from "@/lib/constants";
-import { getAdjacentArticles, getPublishedArticleBySlug } from "@/lib/queries";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { SITE } from "@/lib/constants";
+import {
+  getAdjacentArticles,
+  getArticleCategories,
+  getPublishedArticleBySlug
+} from "@/lib/queries";
 import { formatDate } from "@/lib/utils";
 import { normalizeSeoMetadata } from "@/lib/seo-types";
 import { absoluteSiteUrl } from "@/lib/site-url";
@@ -55,10 +60,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticleDetailPage({ params }: Props) {
   const { slug } = await params;
-  const article = await getPublishedArticleBySlug(slug).catch(() => null);
+  const [article, categories] = await Promise.all([
+    getPublishedArticleBySlug(slug).catch(() => null),
+    getArticleCategories()
+  ]);
   if (!article) notFound();
 
-  const category = ARTICLE_CATEGORIES[article.category];
+  const categoryLabel = categoryLabelFor(article.category, categories);
   const { prev, next } = await getAdjacentArticles(slug).catch(() => ({
     prev: undefined,
     next: undefined
@@ -90,7 +98,7 @@ export default async function ArticleDetailPage({ params }: Props) {
 
       <article data-header-theme="light" className="bg-ivory-100">
         <div className="container-site max-w-4xl pt-10">
-          <p className="section-eyebrow">{category.label}</p>
+          <p className="section-eyebrow">{categoryLabel}</p>
           <h1 className="font-display text-3xl font-bold leading-tight text-navy-900 sm:text-4xl">
             {article.title}
           </h1>

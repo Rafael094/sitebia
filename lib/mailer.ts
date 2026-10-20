@@ -194,9 +194,11 @@ export async function getRecipientEmail(): Promise<string | null> {
   let row: SettingsRow | null = null;
   try {
     const admin = getAdminSupabaseClient();
+    // `select("*")` evita que uma coluna ausente (migração v3 ainda não
+    // executada) faça a consulta inteira falhar e derrube os fallbacks.
     const { data } = await admin
       .from("site_settings")
-      .select("contact_recipient_email, contact_email")
+      .select("*")
       .eq("id", 1)
       .maybeSingle();
     row = (data ?? {}) as SettingsRow;
@@ -398,16 +400,31 @@ export async function sendContactNotification(
   }
 
   if (!isSmtpConfigured()) {
-    return { attempted: false, delivered: false };
+    console.warn(
+      `SMTP não configurado (faltando: ${missingSmtpVars().join(", ")}). A mensagem foi salva apenas no painel.`
+    );
+    return {
+      attempted: false,
+      delivered: false,
+      error: `SMTP não configurado (faltando: ${missingSmtpVars().join(", ")}).`
+    };
   }
 
   const recipient = await getRecipientEmail();
   if (!recipient) {
-    return { attempted: false, delivered: false };
+    console.warn(
+      "Nenhum e-mail de destino configurado. A mensagem foi salva apenas no painel."
+    );
+    return {
+      attempted: false,
+      delivered: false,
+      error: "Nenhum e-mail de destino configurado."
+    };
   }
 
   const transport = createTransport();
   try {
+    console.log(`Enviando notificação de contato para ${recipient}…`);
     await transport.verify();
     warnIfSenderLooksInternal();
     await transport.sendMail({

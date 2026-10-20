@@ -4,9 +4,9 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 
 import ArticleCard from "@/components/ui/ArticleCard";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
 import { formatDate } from "@/lib/utils";
-import type { Article } from "@/lib/types";
+import type { Article, ArticleCategoryRecord } from "@/lib/types";
 
 /**
  * Últimos conteúdos — Estilo Banner Imersivo em Destaque (Opção 3):
@@ -14,13 +14,19 @@ import type { Article } from "@/lib/types";
  * overlay escuro, categoria, título, data e CTA integrados) e os artigos
  * seguintes aparecem em uma grade simétrica de cards logo abaixo.
  */
-export default function LatestArticles({ articles }: { articles: Article[] }) {
+export default function LatestArticles({
+  articles,
+  categories = []
+}: {
+  articles: Article[];
+  categories?: ArticleCategoryRecord[];
+}) {
   if (!articles.length) return null;
 
   const featured = articles[0];
   const rest = articles.slice(1, 4);
 
-  const featuredCategory = ARTICLE_CATEGORIES[featured.category];
+  const featuredCategoryLabel = categoryLabelFor(featured.category, categories);
   const hasCover = Boolean(featured.cover_image_url);
 
   return (
@@ -68,7 +74,7 @@ export default function LatestArticles({ articles }: { articles: Article[] }) {
             {/* Conteúdo integrado na base do banner. */}
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10">
               <span className="inline-flex items-center rounded-sm bg-gold-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-navy-900 shadow-sm">
-                {featuredCategory.label}
+                {featuredCategoryLabel}
               </span>
               {/* <h3 className="mt-3 max-w-3xl font-display text-2xl font-bold leading-tight text-ivory-100 transition-colors group-hover:text-gold-300 sm:text-3xl lg:text-4xl">
                 {featured.title}
@@ -91,7 +97,11 @@ export default function LatestArticles({ articles }: { articles: Article[] }) {
         {rest.length > 0 && (
           <div className="mt-6 grid items-stretch gap-6 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-3">
             {rest.map((a) => (
-              <ArticleCard key={a.id} article={a} />
+              <ArticleCard
+                key={a.id}
+                article={a}
+                categoryLabel={categoryLabelFor(a.category, categories)}
+              />
             ))}
           </div>
         )}

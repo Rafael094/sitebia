@@ -18,6 +18,7 @@ export default function ContactForm() {
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
+  const [deliveryIssue, setDeliveryIssue] = useState<string | null>(null);
 
   function resetCaptcha() {
     setCaptchaToken(null);
@@ -27,6 +28,7 @@ export default function ContactForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setDeliveryIssue(null);
 
     if (IS_RECAPTCHA_ENABLED && !captchaToken) {
       setError("Confirme o reCAPTCHA (“Não sou um robô”) para enviar.");
@@ -55,7 +57,11 @@ export default function ContactForm() {
       });
 
       const data = (await res.json().catch(() => null)) as
-        | { ok: boolean; error?: string | null }
+        | {
+            ok: boolean;
+            error?: string | null;
+            email?: { attempted: boolean; delivered: boolean } | null;
+          }
         | null;
 
       if (res.status === 429 || !res.ok || !data?.ok) {
@@ -63,6 +69,11 @@ export default function ContactForm() {
         // O token do reCAPTCHA é de uso único: libera um novo após cada falha.
         resetCaptcha();
         return;
+      }
+      if (data.email && !data.email.delivered) {
+        setDeliveryIssue(
+          "Sua mensagem foi registrada, mas o envio automático do e-mail não foi concluído. Ela ficou salva no painel e será vista pela equipe."
+        );
       }
       setSent(true);
       form.reset();
@@ -86,6 +97,14 @@ export default function ContactForm() {
           Agradecemos o contato. Sua mensagem ficou registrada e retornaremos o
           mais breve possível.
         </p>
+        {deliveryIssue && (
+          <p
+            role="status"
+            className="mx-auto mt-4 max-w-sm rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900"
+          >
+            {deliveryIssue}
+          </p>
+        )}
         <button type="button" onClick={() => setSent(false)} className="btn-ghost mt-6">
           Enviar nova mensagem
         </button>

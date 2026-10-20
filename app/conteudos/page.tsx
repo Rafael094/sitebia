@@ -3,8 +3,8 @@ import { Newspaper } from "lucide-react";
 
 import PageHero from "@/components/ui/PageHero";
 import ArticleCard from "@/components/ui/ArticleCard";
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
-import { getPublishedArticles } from "@/lib/queries";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { getArticleCategories, getPublishedArticles } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { pageMetadata } from "@/lib/page-metadata";
 
@@ -17,22 +17,33 @@ interface Props {
   searchParams: Promise<{ categoria?: string }>;
 }
 
-/** Filtro por categoria — usado para gerar os botões/tabs. */
-const CATEGORY_FILTERS = [
-  { value: "todos", label: "Todos" },
-  ...Object.entries(ARTICLE_CATEGORIES).map(([value, { label }]) => ({
-    value,
-    label
-  }))
-];
-
 export default async function ConteudosPage({ searchParams }: Props) {
   const { categoria } = await searchParams;
   const current = categoria ?? "todos";
 
-  const articles = await getPublishedArticles({
-    category: current
-  }).catch(() => []);
+  const [articles, categories] = await Promise.all([
+    getPublishedArticles({ category: current }).catch(() => []),
+    getArticleCategories()
+  ]);
+
+  // Filtros: somente categorias ativas, mantendo a atual visível se estiver
+  // inativa (link antigo/bookmark) para o usuário não perder o contexto.
+  const activeCategories = categories.filter((category) => category.is_active);
+  const filters = [
+    { value: "todos", label: "Todos" },
+    ...activeCategories.map((category) => ({
+      value: category.slug,
+      label: category.label
+    }))
+  ];
+  const currentCategory = categories.find((category) => category.slug === current);
+  if (
+    current !== "todos" &&
+    currentCategory &&
+    !filters.some((filter) => filter.value === currentCategory.slug)
+  ) {
+    filters.push({ value: currentCategory.slug, label: currentCategory.label });
+  }
 
   return (
     <>
@@ -47,7 +58,7 @@ export default async function ConteudosPage({ searchParams }: Props) {
         <div className="container-site">
           {/* Tabs de filtro por categoria */}
           <div className="flex flex-wrap gap-2">
-            {CATEGORY_FILTERS.map((f) => {
+            {filters.map((f) => {
               const active = current === f.value;
               const params = new URLSearchParams();
               if (f.value !== "todos") params.set("categoria", f.value);
@@ -77,7 +88,11 @@ export default async function ConteudosPage({ searchParams }: Props) {
           ) : (
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  categoryLabel={categoryLabelFor(article.category, categories)}
+                />
               ))}
             </div>
           )}

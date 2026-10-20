@@ -2,7 +2,7 @@
 // Automações de SEO dos artigos (usadas no Admin e no servidor de gravação).
 // ============================================================================
 
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
 import { slugify } from "@/lib/utils";
 import type { ArticleCategory } from "@/lib/types";
 
@@ -30,7 +30,11 @@ export function stripMarkdown(src: string): string {
 export { slugify };
 
 /** Extrai uma lista única de keywords a partir do título + categoria. */
-export function buildAutoTags(title: string, category: ArticleCategory): string[] {
+export function buildAutoTags(
+  title: string,
+  category: ArticleCategory,
+  categoryLabel?: string
+): string[] {
   const words = stripMarkdown(title)
     .toLowerCase()
     .normalize("NFD")
@@ -39,7 +43,7 @@ export function buildAutoTags(title: string, category: ArticleCategory): string[
     .filter(Boolean);
 
   const tags = distinctAgainstStop(words).map(slugify);
-  const catLabel = ARTICLE_CATEGORIES[category]?.label ?? "";
+  const catLabel = categoryLabel?.trim() || categoryLabelFor(category);
   const catTags = catLabel
     .toLowerCase()
     .split(/[^a-z0-9]+/)
@@ -68,6 +72,8 @@ export function resolveArticleSeo(input: {
   summary: string;
   content: string;
   category: ArticleCategory;
+  /** Rótulo da categoria (vindo do painel); se ausente, usa o slug legível. */
+  categoryLabel?: string;
   metaDescription?: string;
   tags?: string;
 }): { metaDescription: string; tags: string[] } {
@@ -86,7 +92,7 @@ export function resolveArticleSeo(input: {
 
   const tags = providedTags.length
     ? providedTags.slice(0, 10)
-    : buildAutoTags(input.title, input.category);
+    : buildAutoTags(input.title, input.category, input.categoryLabel);
 
   return { metaDescription, tags };
 }

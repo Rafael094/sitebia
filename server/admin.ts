@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getAdminSupabaseClient } from "@/lib/supabase/admin";
+import { humanizeCategorySlug } from "@/lib/article-categories";
 import { COVER_BUCKET } from "@/lib/constants";
 import { randomId, slugify } from "@/lib/utils";
 import { resolveArticleSeo } from "@/lib/seo-article";
@@ -119,7 +120,10 @@ export async function deleteService(id: string) {
 async function upsertArticle(formData: FormData, id?: string) {
   const title = String(formData.get("title") ?? "").trim();
   let slug = String(formData.get("slug") ?? "").trim() || slugify(title);
-  const category = String(formData.get("category") ?? "") as ArticleCategory;
+  const category = String(formData.get("category") ?? "").trim() as ArticleCategory;
+  if (!category) {
+    return { ok: false, error: "Selecione uma categoria para o conteúdo." };
+  }
   const summary = String(formData.get("summary") ?? "").trim();
   const content = String(formData.get("content") ?? "");
   const author = String(formData.get("author") ?? "Bianca Martins").trim();
@@ -129,16 +133,39 @@ async function upsertArticle(formData: FormData, id?: string) {
   // Correção: evita dupla proteção de quebras (\n virando texto literal).
   // O corpo agora vem como HTML rico (CKEditor 5) — sanitiza antes de gravar.
   const contentClean = sanitizeRichHtml(String(content).replace(/\\\\r?\\\\n/g, "\n"));
+
+  const admin = getAdminSupabaseClient();
+
+  // --- Categoria editável ---------------------------------------------------
+  // Valida contra a tabela quando ela existe. Se a migração v10 ainda não foi
+  // aplicada, aceita o valor legado e usa um rótulo legível como fallback.
+  let categoryLabel = humanizeCategorySlug(category);
+  const categoryLookup = await admin
+    .from("article_categories")
+    .select("label")
+    .eq("slug", category)
+    .maybeSingle();
+  if (!categoryLookup.error) {
+    if (!categoryLookup.data) {
+      return {
+        ok: false,
+        error: "A categoria selecionada não existe mais. Atualize a página e escolha outra."
+      };
+    }
+    categoryLabel =
+      String((categoryLookup.data as { label?: string }).label ?? "").trim() ||
+      categoryLabel;
+  }
+
   const seoLegacy = resolveArticleSeo({
     title,
     summary,
     content: contentClean,
     category,
+    categoryLabel,
     metaDescription: String(formData.get("meta_description") ?? "").trim(),
     tags: String(formData.get("tags") ?? "").trim()
   });
-
-  const admin = getAdminSupabaseClient();
 
   // --- Anti-duplicidade (rede de segurança no servidor) --------------------
   // O gerador com IA já evita temas repetidos, mas o formulário também aceita

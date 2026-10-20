@@ -117,16 +117,21 @@ export async function POST(request: Request) {
   }
 
   // --- Registra + dispara o e-mail (importa ao menos persistir) ---
-  const { attempted, delivered } = await sendContactNotification({
-    name,
-    email,
-    phone,
-    subject,
-    message
-  });
+  const { attempted, delivered, error: emailError } =
+    await sendContactNotification({
+      name,
+      email,
+      phone,
+      subject,
+      message
+    });
 
   return NextResponse.json(
-    { ok: true, error: null, email: { attempted, delivered } },
+    {
+      ok: true,
+      error: null,
+      email: { attempted, delivered, error: emailError ?? null }
+    },
     { status: 200 }
   );
 }

@@ -15,7 +15,8 @@
 import { ImageResponse } from "next/og";
 import React from "react";
 
-import { COVER_BUCKET, ARTICLE_CATEGORIES } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { COVER_BUCKET } from "@/lib/constants";
 import { getAdminSupabaseClient } from "@/lib/supabase/admin";
 import { randomId } from "@/lib/utils";
 import type { ArticleCategory } from "@/lib/types";
@@ -31,6 +32,8 @@ export interface CoverGenInput {
   title: string;
   /** Categoria — define o eyebrow exibido na capa. */
   category: ArticleCategory;
+  /** Rótulo editável da categoria (vindo do painel). */
+  categoryLabel?: string;
   /** Descrição (pt-BR) do tema sugerida pela IA (usada pela API externa). */
   imagePrompt?: string;
 }
@@ -80,7 +83,7 @@ async function uploadCoverBuffer(bytes: Buffer): Promise<string> {
  * adequada ao `aspect-[16/7]` da página do artigo).
  */
 function renderBrandedCover(input: CoverGenInput): ImageResponse {
-  const categoryLabel = ARTICLE_CATEGORIES[input.category]?.label ?? "Conteúdos";
+  const categoryLabel = input.categoryLabel?.trim() || categoryLabelFor(input.category);
   const title = truncateTitle(input.title);
 
   return new ImageResponse(

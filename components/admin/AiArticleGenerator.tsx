@@ -5,8 +5,9 @@ import { Loader2, Sparkles, Wand2 } from "lucide-react";
 
 import ArticleForm from "@/components/admin/ArticleForm";
 import { generateArticleDraftAction } from "@/server/ai-content-admin";
-import { ARTICLE_CATEGORY_LIST } from "@/lib/constants";
+import { DEFAULT_ARTICLE_CATEGORIES } from "@/lib/constants";
 import type { ArticleDraft } from "@/lib/deepseek-article";
+import type { ArticleCategoryRecord } from "@/lib/types";
 
 /**
  * Gerador de conteúdo com IA (DeepSeek).
@@ -22,7 +23,15 @@ import type { ArticleDraft } from "@/lib/deepseek-article";
  *   3) O resultado pré-preenche o ArticleForm — TUDO editável — e o admin
  *      revisa e publica pelo fluxo normal.
  */
-export default function AiArticleGenerator() {
+export default function AiArticleGenerator({
+  categories = []
+}: {
+  categories?: ArticleCategoryRecord[];
+}) {
+  const allCategories = categories.length ? categories : DEFAULT_ARTICLE_CATEGORIES;
+  const activeCategories = allCategories.filter((item) => item.is_active);
+  const categoryOptions = activeCategories.length ? activeCategories : allCategories;
+
   const [topic, setTopic] = useState("");
   const [category, setCategory] = useState("");
   const [audience, setAudience] = useState("");
@@ -112,8 +121,8 @@ export default function AiArticleGenerator() {
               onChange={(e) => setCategory(e.target.value)}
             >
               <option value="">A IA decide</option>
-              {ARTICLE_CATEGORY_LIST.map((c) => (
-                <option key={c.value} value={c.value}>
+              {categoryOptions.map((c) => (
+                <option key={c.id || c.slug} value={c.slug}>
                   {c.label}
                 </option>
               ))}
@@ -195,7 +204,7 @@ export default function AiArticleGenerator() {
             )}
           </div>
           <div className="card p-6">
-            <ArticleForm initial={draft} />
+            <ArticleForm initial={draft} categories={categories} />
           </div>
         </section>
       )}

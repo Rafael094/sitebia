@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 
 import ArticleForm from "@/components/admin/ArticleForm";
+import { getAdminCategoriesSafe } from "@/lib/article-categories-data";
 
 export const metadata: Metadata = { title: "Novo Conteúdo", robots: { index: false } };
+export const dynamic = "force-dynamic";
 
-export default function NovoConteudoPage() {
+export default async function NovoConteudoPage() {
+  const categories = await getAdminCategoriesSafe();
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -14,7 +18,7 @@ export default function NovoConteudoPage() {
         </p>
       </div>
       <div className="card p-6">
-        <ArticleForm />
+        <ArticleForm categories={categories} />
       </div>
     </div>
   );

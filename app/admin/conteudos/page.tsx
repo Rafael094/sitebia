@@ -4,7 +4,8 @@ import Image from "next/image";
 import { FileText, Pencil } from "lucide-react";
 
 import { listAdminArticles } from "@/server/admin-data";
-import { ARTICLE_CATEGORY_LIST } from "@/lib/constants";
+import { categoryLabelFor } from "@/lib/article-categories";
+import { getAdminCategoriesSafe } from "@/lib/article-categories-data";
 import { formatDate, cn } from "@/lib/utils";
 import DeleteArticleButton from "@/components/admin/DeleteArticleButton";
 
@@ -12,7 +13,10 @@ export const metadata: Metadata = { title: "Conteúdos", robots: { index: false 
 export const dynamic = "force-dynamic";
 
 export default async function AdminConteudosPage() {
-  const articles = await listAdminArticles().catch(() => []);
+  const [articles, categories] = await Promise.all([
+    listAdminArticles().catch(() => []),
+    getAdminCategoriesSafe()
+  ]);
 
   return (
     <div className="space-y-6">
@@ -21,7 +25,14 @@ export default async function AdminConteudosPage() {
           <h1 className="font-display text-2xl font-semibold text-navy-900">Conteúdos</h1>
           <p className="mt-1 text-sm text-navy-500">Artigos técnicos e institucionais do blog /conteudos.</p>
         </div>
-        <Link href="/admin/conteudos/novo" className="btn-primary">+ Novo conteúdo</Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/admin/conteudos/categorias" className="btn-ghost">
+            Categorias
+          </Link>
+          <Link href="/admin/conteudos/novo" className="btn-primary">
+            + Novo conteúdo
+          </Link>
+        </div>
       </div>
 
       {articles.length === 0 ? (
@@ -52,10 +63,7 @@ export default async function AdminConteudosPage() {
                       {a.is_published ? "Publicado" : "Rascunho"}
                     </span>
                     <span className="text-[11px] uppercase tracking-wide text-navy-400">
-                      {
-                        ARTICLE_CATEGORY_LIST.find((c) => c.value === a.category)?.label ??
-                        a.category
-                      }
+                      {categoryLabelFor(a.category, categories)}
                     </span>
                   </div>
                   <Link href={`/admin/conteudos/${a.id}/editar`} className="mt-1 block font-medium text-navy-900 hover:text-navy-700">

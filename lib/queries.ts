@@ -1,7 +1,9 @@
 import { cache } from "react";
 
+import { DEFAULT_ARTICLE_CATEGORIES } from "@/lib/constants";
+import { sortArticleCategories } from "@/lib/article-categories";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Article, Service } from "@/lib/types";
+import type { Article, ArticleCategoryRecord, Service } from "@/lib/types";
 
 /**
  * Camada de acesso a dados do SITE PÚBLICO.
@@ -40,6 +42,29 @@ export const getServiceBySlug = cache(
 
     if (error) throw error;
     return data;
+  }
+);
+
+/**
+ * Categorias de conteúdo cadastradas no painel.
+ * A leitura é pública (RLS permite SELECT); se a migração ainda não foi
+ * aplicada, devolve os padrões para o site não quebrar.
+ */
+export const getArticleCategories = cache(
+  async (): Promise<ArticleCategoryRecord[]> => {
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { data, error } = await supabase
+        .from("article_categories")
+        .select("*")
+        .order("order_index", { ascending: true })
+        .order("label", { ascending: true });
+
+      if (error) throw error;
+      return sortArticleCategories((data ?? []) as ArticleCategoryRecord[]);
+    } catch {
+      return DEFAULT_ARTICLE_CATEGORIES;
+    }
   }
 );
 

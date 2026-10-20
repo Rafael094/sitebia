@@ -3,13 +3,17 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 
 import AiArticleGenerator from "@/components/admin/AiArticleGenerator";
+import { getAdminActiveCategoriesSafe } from "@/lib/article-categories-data";
 
 export const metadata: Metadata = {
   title: "IA & Conteúdos",
   robots: { index: false }
 };
+export const dynamic = "force-dynamic";
 
-export default function AdminIaConteudosPage() {
+export default async function AdminIaConteudosPage() {
+  const categories = await getAdminActiveCategoriesSafe();
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -28,7 +32,7 @@ export default function AdminIaConteudosPage() {
         </Link>
       </div>
 
-      <AiArticleGenerator />
+      <AiArticleGenerator categories={categories} />
     </div>
   );
 }

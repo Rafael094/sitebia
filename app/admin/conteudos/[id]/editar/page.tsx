@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 
 import { getAdminArticle } from "@/server/admin-data";
 import ArticleForm from "@/components/admin/ArticleForm";
+import { getAdminCategoriesSafe } from "@/lib/article-categories-data";
 
 export const metadata: Metadata = { title: "Editar Conteúdo", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function EditarConteudoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const article = await getAdminArticle(id);
+  const [article, categories] = await Promise.all([
+    getAdminArticle(id),
+    getAdminCategoriesSafe()
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -18,7 +22,7 @@ export default async function EditarConteudoPage({ params }: { params: Promise<{
       </div>
       {article ? (
         <div className="card p-6">
-          <ArticleForm article={article} isEditing />
+          <ArticleForm article={article} isEditing categories={categories} />
         </div>
       ) : (
         <div className="card p-10 text-center text-sm text-navy-500">

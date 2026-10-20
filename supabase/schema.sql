@@ -47,12 +47,33 @@ create table if not exists public.services (
   updated_at    timestamptz not null default now()
 );
 
+-- Categorias editaveis dos artigos (painel /admin/conteudos/categorias).
+create table if not exists public.article_categories (
+  id          uuid primary key default gen_random_uuid(),
+  slug        text not null unique,
+  label       text not null,
+  description text not null default '',
+  order_index int not null default 0,
+  is_active   boolean not null default true,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+insert into public.article_categories
+  (slug, label, description, order_index, is_active)
+values
+  ('transferencia-de-tecnologia', 'Transferência de Tecnologia', 'Licenciamento, cessão e inovação aberta.', 10, true),
+  ('propriedade-intelectual', 'Propriedade Intelectual', 'Patentes, marcas, direitos autorais e segredos.', 20, true),
+  ('contratos-e-parcerias', 'Contratos & Parcerias', 'Acordos, codesenvolvimento e parcerias de P&D.', 30, true)
+on conflict (slug) do nothing;
+
 -- Artigos / noticias / conteudos.
 create table if not exists public.articles (
   id              uuid primary key default gen_random_uuid(),
   title           text not null,
   slug            text not null unique,
-  category        article_category not null,
+  category        text not null references public.article_categories (slug)
+                    on update cascade on delete restrict,
   summary         text not null,                           -- resumo/lead
   content         text not null default '',                -- corpo (HTML semântico do editor)
   cover_image_url text not null default '',                -- capa via Supabase Storage
@@ -120,6 +141,11 @@ create trigger trg_articles_updated_at
   before update on public.articles
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_article_categories_updated_at on public.article_categories;
+create trigger trg_article_categories_updated_at
+  before update on public.article_categories
+  for each row execute function public.set_updated_at();
+
 drop trigger if exists trg_site_settings_updated_at on public.site_settings;
 create trigger trg_site_settings_updated_at
   before update on public.site_settings
@@ -147,6 +173,8 @@ create index if not exists idx_services_slug      on public.services (slug);
 create index if not exists idx_articles_slug      on public.articles (slug);
 create index if not exists idx_articles_published on public.articles (is_published, created_at desc);
 create index if not exists idx_articles_category  on public.articles (category);
+create index if not exists idx_article_categories_order
+  on public.article_categories (order_index, label);
 
 -- ================================================================
 -- 6. ROW LEVEL SECURITY
@@ -156,9 +184,10 @@ create index if not exists idx_articles_category  on public.articles (category);
 --      (via login Supabase Auth no painel /admin).
 --   * O formulario publico de contato pode INSERT recados.
 -- ================================================================
-alter table public.services         enable row level security;
-alter table public.articles         enable row level security;
-alter table public.contact_messages enable row level security;
+alter table public.services            enable row level security;
+alter table public.article_categories  enable row level security;
+alter table public.articles            enable row level security;
+alter table public.contact_messages    enable row level security;
 alter table public.site_settings    enable row level security;
 alter table public.page_views       enable row level security;
 
@@ -172,6 +201,18 @@ create policy "services_public_read"
 drop policy if exists "services_auth_all" on public.services;
 create policy "services_auth_all"
   on public.services for all
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+-- ARTICLE_CATEGORIES --------------------------------------------------------
+drop policy if exists "article_categories_public_read" on public.article_categories;
+create policy "article_categories_public_read"
+  on public.article_categories for select
+  using (true);
+
+drop policy if exists "article_categories_auth_all" on public.article_categories;
+create policy "article_categories_auth_all"
+  on public.article_categories for all
   using (auth.role() = 'authenticated')
   with check (auth.role() = 'authenticated');
 

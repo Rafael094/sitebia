@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 
-import { ARTICLE_CATEGORIES } from "@/lib/constants";
+import { humanizeCategorySlug } from "@/lib/article-categories";
 import { formatDate } from "@/lib/utils";
 import type { Article } from "@/lib/types";
 
@@ -13,6 +13,8 @@ type Props = {
   >;
   priority?: boolean;
   className?: string;
+  /** Rótulo já resolvido pelo servidor (categoria editável no painel). */
+  categoryLabel?: string;
   /**
    * Card em destaque (ocupa mais de uma linha do grid). A capa passa a
    * absorver a altura extra da célula, evitando o vão em branco abaixo do
@@ -26,9 +28,10 @@ export default function ArticleCard({
   article,
   priority,
   className = "",
+  categoryLabel,
   feature = false
 }: Props) {
-  const category = ARTICLE_CATEGORIES[article.category];
+  const label = categoryLabel || humanizeCategorySlug(article.category);
   const hasCover = Boolean(article.cover_image_url);
 
   return (
@@ -63,7 +66,7 @@ export default function ArticleCard({
           </div>
         )}
         <span className="absolute left-3 top-3 rounded-sm bg-ivory-100/95 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-navy-800 shadow-sm backdrop-blur-sm">
-          {category.label}
+          {label}
         </span>
       </div>
 

@@ -6,7 +6,11 @@ import ServicesOverview from "@/components/home/ServicesOverview";
 import Journey from "@/components/home/Journey";
 import LatestArticles from "@/components/home/LatestArticles";
 import CtaBanner from "@/components/ui/CtaBanner";
-import { getActiveServices, getPublishedArticles } from "@/lib/queries";
+import {
+  getActiveServices,
+  getArticleCategories,
+  getPublishedArticles
+} from "@/lib/queries";
 import { pageMetadata } from "@/lib/page-metadata";
 
 // SEO editável pelo painel (/admin/seo) com fallback no padrão do site.
@@ -22,9 +26,10 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   // Busca os dados no servidor. Gestão de erro: caso o banco ainda não esteja
   // totalmente populado, cai nas listas vazias para não quebrar a renderização.
-  const [services, articles] = await Promise.all([
+  const [services, articles, categories] = await Promise.all([
     getActiveServices(4).catch(() => []),
-    getPublishedArticles({ limit: 4 }).catch(() => [])
+    getPublishedArticles({ limit: 4 }).catch(() => []),
+    getArticleCategories()
   ]);
 
   return (
@@ -33,7 +38,7 @@ export default async function HomePage() {
       <About />
       <ServicesOverview services={services} />
       <Journey />
-      <LatestArticles articles={articles} />
+      <LatestArticles articles={articles} categories={categories} />
       <CtaBanner />
     </>
   );
