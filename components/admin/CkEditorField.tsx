@@ -166,6 +166,13 @@ export default function CkEditorField({
               Underline,
               Undo
             ],
+            heading: {
+              options: [
+                { model: "paragraph", title: "Parágrafo", class: "ck-heading_paragraph" },
+                { model: "heading2", view: "h2", title: "Título 2", class: "ck-heading_heading2" },
+                { model: "heading3", view: "h3", title: "Título 3", class: "ck-heading_heading3" }
+              ]
+            },
             toolbar: {
               items: [
                 "undo",

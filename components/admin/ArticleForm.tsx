@@ -200,7 +200,7 @@ export default function ArticleForm({
           label="Corpo do conteúdo"
           value={body}
           onChange={setBody}
-          hint="Editor de texto rico: títulos, negrito, listas, citações, imagens e tabelas são preservados."
+          hint="Para títulos de seção, escolha «Título 2» ou «Título 3» no menu de blocos. Negrito e tamanho de fonte não criam um título de verdade — servem apenas para destaque."
           placeholder="Escreva o corpo do conteúdo…"
         />
       </div>
