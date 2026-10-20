@@ -3,12 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** Realiza o login (função nativa do Supabase Auth — email/senha). */
 export async function signInWithEmail(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+
+  // Proteção contra força bruta (ativa quando RECAPTCHA_SECRET_KEY existe).
+  const recaptcha = await verifyRecaptcha(
+    String(formData.get("recaptchaToken") ?? "")
+  );
+  if (!recaptcha.ok) {
+    return {
+      ok: false,
+      error:
+        "Não foi possível validar o reCAPTCHA. Atualize a página e tente novamente."
+    };
+  }
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });

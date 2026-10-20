@@ -20,6 +20,35 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/**
+ * Garante que um link externo salvo no painel seja absoluto.
+ *
+ * Sem isso, um valor como `linkedin.com/in/bianca-martins-paula` (sem
+ * `https://`) é interpretado pelo navegador como caminho relativo e vira
+ * `https://<site>/linkedin.com/...`. Regras:
+ *   - vazio -> `""` (o chamador aplica o fallback padrão);
+ *   - já tem esquema (`http:`, `https:`, `mailto:`, `tel:`…) -> mantido;
+ *   - protocolo relativo (`//exemplo.com`) -> recebe `https:` na frente;
+ *   - caminho interno (`/contato`) -> mantido como está;
+ *   - qualquer outro valor -> recebe `https://` na frente.
+ */
+export function normalizeExternalUrl(value: string | null | undefined): string {
+  const raw = (value ?? "").trim();
+  if (!raw) return "";
+
+  // Já tem esquema (http, https, mailto, tel, wa.me etc.).
+  if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return raw;
+
+  // Protocolo relativo (`//exemplo.com`) — completa só o esquema.
+  if (raw.startsWith("//")) return `https:${raw}`;
+
+  // Caminho interno do próprio site: não deve ganhar domínio externo.
+  if (raw.startsWith("/")) return raw;
+
+  // Domínio/ perfil digitado sem esquema.
+  return `https://${raw.replace(/^\/+/, "")}`;
+}
+
 /** Gera uma string aleatória (para nomes de arquivos únicos). */
 export function randomId(length = 12): string {
   const charset =

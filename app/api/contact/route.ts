@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { sendContactNotification } from "@/lib/mailer";
 import { enforceContactRateLimit } from "@/lib/rate-limit";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 export const runtime = "nodejs";
 
@@ -81,6 +82,19 @@ export async function POST(request: Request) {
   if (message.length < 10) {
     return NextResponse.json<ContactErrorBody>(
       { ok: false, error: "Escreva uma mensagem com pelo menos 10 caracteres." },
+      { status: 400 }
+    );
+  }
+
+  // --- reCAPTCHA (quando RECAPTCHA_SECRET_KEY está configurada) ---
+  const recaptcha = await verifyRecaptcha(str("recaptchaToken"), ip);
+  if (!recaptcha.ok) {
+    return NextResponse.json<ContactErrorBody>(
+      {
+        ok: false,
+        error:
+          "Não foi possível validar o reCAPTCHA. Atualize a página e tente novamente."
+      },
       { status: 400 }
     );
   }

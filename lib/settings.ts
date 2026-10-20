@@ -1,9 +1,14 @@
 import { DEFAULT_CONTACT_CHANNELS } from "@/lib/constants";
 import type { SiteContactLinks, SiteSettings } from "@/lib/types";
+import { normalizeExternalUrl } from "@/lib/utils";
 
 /**
  * Normaliza a linha única de "site_settings" (ou a ausência dela) em um objeto
  * de canais completos — nunca retorna campos vazios.
+ *
+ * Os links externos passam por `normalizeExternalUrl`, então valores antigos
+ * salvos sem esquema (ex.: `linkedin.com/in/...`) não quebram mais como caminho
+ * relativo do próprio site.
  */
 export function siteSettingsToContactLinks(
   row?: Partial<SiteSettings> | null
@@ -11,10 +16,10 @@ export function siteSettingsToContactLinks(
   const defaults = DEFAULT_CONTACT_CHANNELS;
   const value = (v?: string | null) => v?.trim() || "";
   return {
-    whatsapp: value(row?.whatsapp_link) || defaults.whatsapp,
+    whatsapp: normalizeExternalUrl(value(row?.whatsapp_link)) || defaults.whatsapp,
     email: value(row?.contact_email) || defaults.email,
-    instagram: value(row?.instagram_link) || defaults.instagram,
-    linkedin: value(row?.linkedin_link) || defaults.linkedin,
+    instagram: normalizeExternalUrl(value(row?.instagram_link)) || defaults.instagram,
+    linkedin: normalizeExternalUrl(value(row?.linkedin_link)) || defaults.linkedin,
     address: value(row?.contact_address) || defaults.address,
     hours: value(row?.contact_hours) || defaults.hours
   };
@@ -33,10 +38,10 @@ export function contactLinksToSettingsRow(
   | "contact_hours"
 > {
   return {
-    whatsapp_link: links.whatsapp.trim(),
+    whatsapp_link: normalizeExternalUrl(links.whatsapp),
     contact_email: links.email.trim(),
-    instagram_link: links.instagram.trim(),
-    linkedin_link: links.linkedin.trim(),
+    instagram_link: normalizeExternalUrl(links.instagram),
+    linkedin_link: normalizeExternalUrl(links.linkedin),
     contact_address: links.address.trim(),
     contact_hours: links.hours.trim()
   };

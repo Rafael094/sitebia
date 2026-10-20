@@ -3,20 +3,36 @@
 import { useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 
+import Recaptcha from "@/components/ui/Recaptcha";
+import { IS_RECAPTCHA_ENABLED } from "@/lib/recaptcha-client";
+
 /**
  * Formulário público de contato.
  * Envia para a API Route /api/contact que aplica anti-spam (honeypot +
- * rate limiting por IP), grava em contact_messages e dispara o e-mail SMTP
- * para o destino configurado no painel.
+ * reCAPTCHA + rate limiting por IP), grava em contact_messages e dispara o
+ * e-mail SMTP para o destino configurado no painel.
  */
 export default function ContactForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
+
+  function resetCaptcha() {
+    setCaptchaToken(null);
+    setCaptchaReset((value) => value + 1);
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (IS_RECAPTCHA_ENABLED && !captchaToken) {
+      setError("Confirme o reCAPTCHA (“Não sou um robô”) para enviar.");
+      return;
+    }
+
     setLoading(true);
 
     const form = e.currentTarget;
@@ -33,7 +49,8 @@ export default function ContactForm() {
           subject: fd.get("subject")?.toString().trim() ?? "",
           message: fd.get("message")?.toString().trim() ?? "",
           // Honeypot anti-robô (invisível para humanos).
-          website_sweet: fd.get("website_sweet")?.toString() ?? ""
+          website_sweet: fd.get("website_sweet")?.toString() ?? "",
+          recaptchaToken: captchaToken ?? ""
         })
       });
 
@@ -43,12 +60,16 @@ export default function ContactForm() {
 
       if (res.status === 429 || !res.ok || !data?.ok) {
         setError(data?.error || "Não foi possível enviar. Tente novamente.");
+        // O token do reCAPTCHA é de uso único: libera um novo após cada falha.
+        resetCaptcha();
         return;
       }
       setSent(true);
       form.reset();
+      resetCaptcha();
     } catch {
       setError("Não foi possível enviar agora. Tente novamente.");
+      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -117,6 +138,12 @@ export default function ContactForm() {
         <textarea id="message" name="message" required minLength={10} rows={6} className="input-field"
           placeholder="Conte-nos sobre sua ideia, projeto ou necessidade…" />
       </div>
+
+      <Recaptcha
+        onToken={setCaptchaToken}
+        resetSignal={captchaReset}
+        language="pt-BR"
+      />
 
       <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto">
         {loading ? (

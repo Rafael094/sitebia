@@ -45,7 +45,9 @@ cp .env.example .env.local   # Windows: copy .env.example .env.local
 | `DEEPSEEK_API_KEY` | não | Chave da API do DeepSeek para o SEO por IA |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | não | Envio de e-mail do formulário de contato |
 | `SMTP_FROM` / `SMTP_SECURE` | não | Remetente exibido e TLS forçado (portas não padrão) |
-| `CONTACT_RECIPIENT_EMAIL` | não | Destino das notificações (fallback do painel) |
+| `CONTACT_RECIPIENT_EMAIL` | não | Destino das notificações (`bmadvogada@gmail.com`) |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | recomendada | Chave pública do reCAPTCHA v2 (formulários + login) |
+| `RECAPTCHA_SECRET_KEY` | recomendada | Chave secreta do reCAPTCHA (somente servidor) |
 | `DEEPSEEK_API_URL` / `DEEPSEEK_MODEL` | não | Overrides opcionais do DeepSeek |
 
 Sem `DEEPSEEK_API_KEY` o painel continua funcionando: o SEO é gerado por uma
@@ -79,8 +81,10 @@ Faça isso **antes** do primeiro deploy (ou redeploye depois de alterar):
 | `SMTP_PORT` | `587` (STARTTLS — use 465 só se necessário) | Production, Preview |
 | `SMTP_USER` | **login SMTP** do Brevo (ex.: `8f2c1b001@smtp-brevo.com`) | Production, Preview |
 | `SMTP_PASS` | **SMTP key** gerada no Brevo (não é a senha da conta) | Production, Preview |
-| `SMTP_FROM` | `Site Bianca Martins <contato@seudominio.com>` (remetente verificado) | Production, Preview |
-| `CONTACT_RECIPIENT_EMAIL` | caixa que recebe os contatos | Production, Preview |
+| `SMTP_FROM` | `Site Bianca Martins <contato@biancamartinsinovacao.com.br>` (remetente verificado) | Production, Preview |
+| `CONTACT_RECIPIENT_EMAIL` | `bmadvogada@gmail.com` (caixa que recebe os contatos) | Production, Preview |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | chave pública do reCAPTCHA v2 | Production, Preview |
+| `RECAPTCHA_SECRET_KEY` | chave secreta do reCAPTCHA v2 | Production, Preview |
 
 > 📮 **SMTP do Brevo — onde pegar os dados:** painel do Brevo →
 > **SMTP & API → aba SMTP → SMTP credentials**. Copie o **Login**
@@ -90,7 +94,7 @@ Faça isso **antes** do primeiro deploy (ou redeploye depois de alterar):
 > sem remetente verificado o Brevo recusa o envio.
 >
 > 🚫 Nunca deixe `SMTP_FROM` vazio apontando para o login SMTP do Brevo: use o
-> remetente verificado da Bianca (ex.: `contato@biancamartins.com.br`), por
+> remetente verificado da Bianca (ex.: `contato@biancamartinsinovacao.com.br`), por
 > isso essa variável é **recomendada**, não opcional.
 
 > 💡 A Vercel não aplica `.env.example` automaticamente: as variáveis `SMTP_*`
@@ -102,6 +106,18 @@ Faça isso **antes** do primeiro deploy (ou redeploye depois de alterar):
 > lista variáveis faltantes) e **Enviar e-mail de teste** (dispara para o
 > destino configurado). A rota usada é `GET|POST /api/admin/smtp-test`,
 > protegida por sessão de administrador.
+>
+> 💻 **Teste local (terminal):** com as variáveis no `.env.local`, rode
+> `npm run smtp:test` para validar conexão/AUTH e
+> `npm run smtp:test -- --send` para enviar um e-mail de teste.
+
+> 🤖 **reCAPTCHA v2:** crie as chaves em
+> [google.com/recaptcha/admin](https://www.google.com/recaptcha/admin)
+> (tipo **v2 → “Não sou um robô”**). Informe o domínio do site e copie:
+> **chave do site** → `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` e **chave secreta** →
+> `RECAPTCHA_SECRET_KEY`. O widget aparece no formulário de contato, na landing
+> internacional e no login do painel. Enquanto as chaves não forem definidas,
+> o widget fica oculto e a validação é dispensada (não quebra o site).
 
 4. Clique em **Save**. A Vercel injeta os valores no build/runtime — a chave
    **nunca fica exposta no código** e não é enviada ao navegador

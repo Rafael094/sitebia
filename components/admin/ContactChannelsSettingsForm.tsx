@@ -90,11 +90,15 @@ export default function ContactChannelsSettingsForm({
 
       <section>
         <p className="label-field">Perfil do LinkedIn</p>
+        <p className="mb-1 text-xs text-navy-400">
+          Cole a URL completa do perfil, ex. https://www.linkedin.com/in/bianca-martins-paula
+        </p>
         <input
           name="linkedin"
+          type="url"
           defaultValue={initial.linkedin}
           required
-          placeholder="https://www.linkedin.com/…"
+          placeholder="https://www.linkedin.com/in/…"
           className="input-field"
         />
       </section>

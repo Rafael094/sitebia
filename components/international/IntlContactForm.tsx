@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 
+import Recaptcha from "@/components/ui/Recaptcha";
+import { IS_RECAPTCHA_ENABLED } from "@/lib/recaptcha-client";
+
 const TOPICS = [
   "Intellectual Property",
   "Trademark",
@@ -25,10 +28,23 @@ export default function IntlContactForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
+
+  function resetCaptcha() {
+    setCaptchaToken(null);
+    setCaptchaReset((value) => value + 1);
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (IS_RECAPTCHA_ENABLED && !captchaToken) {
+      setError("Please confirm the reCAPTCHA (“I’m not a robot”) to send.");
+      return;
+    }
+
     setLoading(true);
 
     const form = e.currentTarget;
@@ -65,7 +81,8 @@ export default function IntlContactForm() {
             ? `International inquiry — ${topic}`
             : "International inquiry",
           message: fullMessage,
-          website_sweet: fd.get("website_sweet")?.toString() ?? ""
+          website_sweet: fd.get("website_sweet")?.toString() ?? "",
+          recaptchaToken: captchaToken ?? ""
         })
       });
 
@@ -77,12 +94,16 @@ export default function IntlContactForm() {
         setError(
           data?.error || "We could not send your message. Please try again."
         );
+        // reCAPTCHA tokens are single-use: request a fresh one after failures.
+        resetCaptcha();
         return;
       }
       setSent(true);
       form.reset();
+      resetCaptcha();
     } catch {
       setError("We could not send your message right now. Please try again.");
+      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -232,6 +253,12 @@ export default function IntlContactForm() {
           placeholder="Tell us about your objectives in Brazil, your technology or your client's matter…"
         />
       </div>
+
+      <Recaptcha
+        onToken={setCaptchaToken}
+        resetSignal={captchaReset}
+        language="en"
+      />
 
       <button
         type="submit"

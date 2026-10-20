@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 
+import Recaptcha from "@/components/ui/Recaptcha";
+import { IS_RECAPTCHA_ENABLED } from "@/lib/recaptcha-client";
 import { signInWithEmail } from "@/server/auth";
 
 /** Formulário de login do painel (autenticação nativa Supabase Auth). */
@@ -13,18 +15,38 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
+
+  function resetCaptcha() {
+    setCaptchaToken(null);
+    setCaptchaReset((value) => value + 1);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (IS_RECAPTCHA_ENABLED && !captchaToken) {
+      setError("Confirme o reCAPTCHA (“Não sou um robô”) para entrar.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await signInWithEmail(new FormData(e.currentTarget as HTMLFormElement));
+      const formData = new FormData(e.currentTarget as HTMLFormElement);
+      formData.set("recaptchaToken", captchaToken ?? "");
+      const result = await signInWithEmail(formData);
       // Em sucesso o server action redireciona; aqui tratamos apenas o erro retornado.
-      if (result && !result.ok) setError(result.error);
-      else router.refresh();
+      if (result && !result.ok) {
+        setError(result.error);
+        resetCaptcha();
+      } else {
+        router.refresh();
+      }
     } catch {
       setError("Não foi possível efetuar o login. Tente novamente.");
+      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -81,6 +103,12 @@ export default function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          <Recaptcha
+            onToken={setCaptchaToken}
+            resetSignal={captchaReset}
+            language="pt-BR"
+          />
+
           <button type="submit" disabled={loading} className="btn-primary w-full !bg-gold-500 !text-navy-900 hover:!bg-gold-400">
             {loading ? "Entrando…" : "Entrar"}
           </button>

@@ -70,15 +70,29 @@ function smtpSecure(): boolean {
   return smtpPort() !== 587;
 }
 
-/** Cria o transporte SMTP a partir das variáveis de ambiente. */
+/**
+ * Cria o transporte SMTP a partir das variáveis de ambiente.
+ *
+ * Brevo (recomendado): host `smtp-relay.brevo.com`, porta `587` e STARTTLS.
+ * `requireTLS` garante que a conexão seja criptografada antes do AUTH; os
+ * timeouts evitam que um formulário fique pendurado se o provedor não responder.
+ */
 function createTransport(): Transporter {
+  const secure = smtpSecure();
   return nodemailer.createTransport({
     host: env("SMTP_HOST"),
     port: smtpPort(),
-    secure: smtpSecure(),
+    secure,
+    requireTLS: !secure,
     auth: {
       user: env("SMTP_USER"),
       pass: env("SMTP_PASS")
+    },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
+    tls: {
+      minVersion: "TLSv1.2"
     }
   });
 }
@@ -124,8 +138,22 @@ export function buildContactHtmlHTML(p: ContactPayload): string {
 </td></tr></table></body></html>`;
 }
 
+/**
+ * Extrai apenas o endereço do remetente. Aceita tanto `email@dominio` quanto
+ * `Nome <email@dominio>` (formato usado no `.env.example`).
+ */
 function fromAddress(): string {
-  return env("SMTP_FROM") || env("SMTP_USER") || "no-reply@biancamartins.com.br";
+  const raw =
+    env("SMTP_FROM") || env("SMTP_USER") || "no-reply@biancamartins.com.br";
+  const match = raw.match(/<([^>]+)>/);
+  return (match?.[1] ?? raw).trim();
+}
+
+/** Cabeçalho “De:” válido, com nome de exibição, sem duplicar `<...>`. */
+function fromHeader(): string {
+  const raw = env("SMTP_FROM").trim();
+  if (!raw) return `"Site Bianca Martins" <${fromAddress()}>`;
+  return raw.includes("<") ? raw : `"Site Bianca Martins" <${raw}>`;
 }
 
 /**
@@ -145,6 +173,22 @@ function warnIfSenderLooksInternal(): void {
 
 type SettingsRow = { contact_recipient_email?: string | null; contact_email?: string | null };
 
+/**
+ * Extrai um endereço de e-mail válido de um valor como `Nome <email@dominio>`.
+ * Ignora o login interno do Brevo (`xxxx@smtp-brevo.com`), que não é uma
+ * caixa real e não deve receber notificações.
+ */
+function usableEmail(value: string): string | null {
+  const raw = value.trim();
+  if (!raw) return null;
+
+  const match = raw.match(/<([^>]+)>/);
+  const address = (match?.[1] ?? raw).trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) return null;
+  if (address.toLowerCase().endsWith("@smtp-brevo.com")) return null;
+  return address;
+}
+
 /** E-mail de destino configurado no painel (site_settings), com fallback. */
 export async function getRecipientEmail(): Promise<string | null> {
   let row: SettingsRow | null = null;
@@ -159,13 +203,20 @@ export async function getRecipientEmail(): Promise<string | null> {
   } catch {
     row = null;
   }
+  // 1) Destino específico salvo no painel.
   const custom = row?.contact_recipient_email?.trim();
   if (custom) return custom;
+
+  // 2) Override explícito do ambiente (CONTACT_RECIPIENT_EMAIL).
+  const envRecipient = usableEmail(process.env.CONTACT_RECIPIENT_EMAIL ?? "");
+  if (envRecipient) return envRecipient;
+
+  // 3) E-mail público de contato do site e fallbacks SMTP.
   const fallback = row?.contact_email?.trim();
   if (fallback) return fallback;
   return (
-    process.env.CONTACT_RECIPIENT_EMAIL?.trim() ||
-    process.env.SMTP_USER?.trim() ||
+    usableEmail(env("SMTP_FROM")) ||
+    usableEmail(env("SMTP_USER")) ||
     null
   );
 }
@@ -281,7 +332,7 @@ export async function sendTestEmail(
     await transport.verify();
     warnIfSenderLooksInternal();
     await transport.sendMail({
-      from: `"Site Bianca Martins" <${fromAddress()}>`,
+      from: fromHeader(),
       to: recipient,
       subject: "Teste de envio — Site Bianca Martins",
       text: [
@@ -360,7 +411,7 @@ export async function sendContactNotification(
     await transport.verify();
     warnIfSenderLooksInternal();
     await transport.sendMail({
-      from: `"Site Bianca Martins" <${fromAddress()}>`,
+      from: fromHeader(),
       to: recipient,
       replyTo: `"${payload.name}" <${payload.email}>`,
       subject: `Novo contato — ${payload.subject || payload.name}`,

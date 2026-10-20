@@ -7,6 +7,7 @@ import {
   contactLinksToSettingsRow,
   siteSettingsToContactLinks
 } from "@/lib/settings";
+import { normalizeExternalUrl } from "@/lib/utils";
 import type { SiteContactLinks, SiteSettings } from "@/lib/types";
 
 /** Canais já salvos no banco (ou null quando ainda não configurados). */
@@ -36,10 +37,10 @@ export async function saveContactChannelSettingsAction(
     (formData.get(name)?.toString() ?? "").trim();
 
   const draft: SiteContactLinks = {
-    whatsapp: fieldOf("whatsapp"),
+    whatsapp: normalizeExternalUrl(fieldOf("whatsapp")),
     email: fieldOf("contact_email"),
-    instagram: fieldOf("instagram"),
-    linkedin: fieldOf("linkedin"),
+    instagram: normalizeExternalUrl(fieldOf("instagram")),
+    linkedin: normalizeExternalUrl(fieldOf("linkedin")),
     address: fieldOf("contact_address"),
     hours: fieldOf("contact_hours")
   };
