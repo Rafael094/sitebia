@@ -22,14 +22,65 @@ export interface MailResult {
   error?: string;
 }
 
-/** SMTP minimamente configurado no .env.local? */
+/**
+ * Nomes das variáveis SMTP que o envio exige.
+ * Usado pela tela /admin/configuracoes para dizer exatamente o que falta
+ * (apenas os NOMES — nenhum valor secreto é exposto).
+ */
+export const SMTP_REQUIRED_VARS = [
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASS"
+] as const;
+
+/** Lê do ambiente sem deixar espaços acidentais (comum ao colar na Vercel). */
+function env(name: string): string {
+  return (process.env[name] ?? "").trim();
+}
+
+/** Variáveis SMTP obrigatórias que ainda estão vazias. */
+export function missingSmtpVars(): string[] {
+  return SMTP_REQUIRED_VARS.filter((name) => !env(name));
+}
+
+/** SMTP minimamente configurado (.env.local em dev / Environment Variables na Vercel)? */
 export function isSmtpConfigured(): boolean {
-  return Boolean(
-    process.env.SMTP_HOST &&
-      process.env.SMTP_PORT &&
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASS
-  );
+  return missingSmtpVars().length === 0;
+}
+
+/**
+ * Porta configurada (padrão 587). Valores inválidos caem no padrão para não
+ * quebrar o envio com `NaN`.
+ */
+function smtpPort(): number {
+  const parsed = Number(env("SMTP_PORT"));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 587;
+}
+
+/**
+ * O modo seguro (TLS na conexão) é ligado na 465 e em qualquer porta exceto a
+ * 587. `SMTP_SECURE` (true/false) permite forçar o comportamento quando o
+ * provedor usa uma porta não padrão.
+ */
+function smtpSecure(): boolean {
+  const override = env("SMTP_SECURE").toLowerCase();
+  if (override === "true" || override === "1" || override === "yes") return true;
+  if (override === "false" || override === "0" || override === "no") return false;
+  return smtpPort() !== 587;
+}
+
+/** Cria o transporte SMTP a partir das variáveis de ambiente. */
+function createTransport(): Transporter {
+  return nodemailer.createTransport({
+    host: env("SMTP_HOST"),
+    port: smtpPort(),
+    secure: smtpSecure(),
+    auth: {
+      user: env("SMTP_USER"),
+      pass: env("SMTP_PASS")
+    }
+  });
 }
 
 function escapeHtml(value: string): string {
@@ -74,7 +125,22 @@ export function buildContactHtmlHTML(p: ContactPayload): string {
 }
 
 function fromAddress(): string {
-  return process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "no-reply@biancamartins.com.br";
+  return env("SMTP_FROM") || env("SMTP_USER") || "no-reply@biancamartins.com.br";
+}
+
+/**
+ * Aviso (apenas log) quando não há `SMTP_FROM`: provedores como o Brevo recusam
+ * remetentes não verificados, e o fallback para `SMTP_USER` costuma ser um
+ * login interno (`xxxx@smtp-brevo.com`), que não serve como remetente.
+ */
+function warnIfSenderLooksInternal(): void {
+  if (env("SMTP_FROM")) return;
+  const sender = fromAddress();
+  if (sender.endsWith("@smtp-brevo.com")) {
+    console.warn(
+      "SMTP_FROM não definido e SMTP_USER é um login interno do Brevo. Defina SMTP_FROM com um remetente verificado (Senders & Domains)."
+    );
+  }
 }
 
 type SettingsRow = { contact_recipient_email?: string | null; contact_email?: string | null };
@@ -103,6 +169,164 @@ export async function getRecipientEmail(): Promise<string | null> {
     null
   );
 }
+
+export interface SmtpStatus {
+  /** true quando as 4 variáveis SMTP estão preenchidas no ambiente. */
+  configured: boolean;
+  /** Nomes das variáveis ainda vazias (nunca expõe valores). */
+  missing: string[];
+  /** Host/porta configurados (sem usuário/senha). */
+  host: string | null;
+  port: number | null;
+  secure: boolean;
+  /** Remetente que aparece no "De:" do e-mail. */
+  from: string | null;
+  /** Destino atual das notificações. */
+  recipient: string | null;
+}
+
+/**
+ * Diagnóstico (somente leitura) do que está configurado no ambiente atual —
+ * útil para conferir se as variáveis da Vercel chegaram no runtime.
+ * Nenhum segredo é retornado.
+ */
+export async function getSmtpStatus(): Promise<SmtpStatus> {
+  const missing = missingSmtpVars();
+  return {
+    configured: missing.length === 0,
+    missing,
+    host: env("SMTP_HOST") || null,
+    port: env("SMTP_HOST") ? smtpPort() : null,
+    secure: smtpSecure(),
+    from: env("SMTP_FROM") || env("SMTP_USER") || null,
+    recipient: await getRecipientEmail().catch(() => null)
+  };
+}
+
+export interface SmtpCheckResult extends SmtpStatus {
+  /** Conexão/autenticação aceita pelo servidor SMTP. */
+  verified: boolean;
+  /** Mensagem amigável para o painel. */
+  message: string;
+}
+
+/**
+ * Testa as credenciais SMTP da Vercel/.env.local sem enviar e-mail:
+ * abre a conexão e executa o AUTH do provedor.
+ */
+export async function verifySmtpConnection(): Promise<SmtpCheckResult> {
+  const status = await getSmtpStatus();
+  if (!status.configured) {
+    return {
+      ...status,
+      verified: false,
+      message: `Faltam variáveis na Vercel: ${status.missing.join(", ")}. Adicione em Settings → Environment Variables e faça Redeploy.`
+    };
+  }
+
+  const transport = createTransport();
+  try {
+    await transport.verify();
+    return {
+      ...status,
+      verified: true,
+      message: status.from?.endsWith("@smtp-brevo.com")
+        ? "Conexão e autenticação SMTP OK. Atenção: defina SMTP_FROM com um remetente verificado no Brevo (Senders & Domains) — o login interno @smtp-brevo.com não é aceito como remetente."
+        : "Conexão e autenticação SMTP OK."
+    };
+  } catch (err) {
+    console.error("Falha ao verificar o SMTP:", err);
+    const reason = err instanceof Error ? err.message : String(err);
+    return {
+      ...status,
+      verified: false,
+      message: `Não foi possível autenticar no SMTP: ${reason}`
+    };
+  } finally {
+    transport.close();
+  }
+}
+
+/**
+ * Envia um e-mail de teste para o destino das notificações (ou para `to`).
+ */
+export async function sendTestEmail(
+  to?: string
+): Promise<SmtpCheckResult & { delivered: boolean; recipient: string | null }> {
+  const status = await getSmtpStatus();
+  const recipient = to?.trim() || status.recipient;
+
+  if (!status.configured) {
+    return {
+      ...status,
+      recipient,
+      verified: false,
+      delivered: false,
+      message: `Faltam variáveis na Vercel: ${status.missing.join(", ")}. Adicione em Settings → Environment Variables e faça Redeploy.`
+    };
+  }
+
+  if (!recipient) {
+    return {
+      ...status,
+      verified: false,
+      delivered: false,
+      message:
+        "Nenhum e-mail de destino configurado. Informe um endereço em /admin/configuracoes."
+    };
+  }
+
+  const transport = createTransport();
+  try {
+    await transport.verify();
+    warnIfSenderLooksInternal();
+    await transport.sendMail({
+      from: `"Site Bianca Martins" <${fromAddress()}>`,
+      to: recipient,
+      subject: "Teste de envio — Site Bianca Martins",
+      text: [
+        "Este é um e-mail de teste enviado pelo painel do site.",
+        `Se você recebeu esta mensagem, o SMTP está configurado corretamente.`,
+        "",
+        `Servidor: ${env("SMTP_HOST")}:${smtpPort()}`
+      ].join("\n"),
+      html: `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#ede7db;font-family:Arial">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px"><tr><td align="center">
+  <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:10px;overflow:hidden">
+    <tr><td style="background:#0d1b2a;padding:20px 24px">
+      <span style="background:#c5a059;color:#fff;display:inline-block;padding:2px 8px;border-radius:3px;font-size:12px">SMTP OK</span>
+      <h1 style="margin:8px 0 0;color:#fff;font-size:18px">E-mail de teste</h1>
+    </td></tr>
+    <tr><td style="padding:22px 24px;color:#1c2b3a;font-size:15px;line-height:1.6">
+      <p style="margin:0 0 10px">Se você recebeu esta mensagem, o envio de e-mails do site está funcionando.</p>
+      <p style="margin:0;color:#8a7350;font-size:13px">Servidor: <code>${escapeHtml(`${env("SMTP_HOST")}:${smtpPort()}`)}</code></p>
+    </td></tr>
+  </table>
+</td></tr></table></body></html>`
+    });
+
+    return {
+      ...status,
+      recipient,
+      verified: true,
+      delivered: true,
+      message: `E-mail de teste enviado com sucesso para ${recipient}.`
+    };
+  } catch (err) {
+    console.error("Falha no envio do e-mail de teste:", err);
+    const detail = err instanceof Error ? err.message : String(err);
+    return {
+      ...status,
+      recipient,
+      verified: false,
+      delivered: false,
+      message: `Falha ao enviar o teste: ${detail}`
+    };
+  } finally {
+    transport.close();
+  }
+}
+
 export async function sendContactNotification(
   payload: ContactPayload
 ): Promise<MailResult> {
@@ -131,18 +355,10 @@ export async function sendContactNotification(
     return { attempted: false, delivered: false };
   }
 
+  const transport = createTransport();
   try {
-    const isSecure = Number(process.env.SMTP_PORT) === 465;
-    const transport: Transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: isSecure,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-
+    await transport.verify();
+    warnIfSenderLooksInternal();
     await transport.sendMail({
       from: `"Site Bianca Martins" <${fromAddress()}>`,
       to: recipient,
@@ -168,5 +384,7 @@ export async function sendContactNotification(
       delivered: false,
       error: "A mensagem foi registrada, mas o envio do e-mail falhou."
     };
+  } finally {
+    transport.close();
   }
 }

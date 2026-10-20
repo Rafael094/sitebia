@@ -44,6 +44,8 @@ cp .env.example .env.local   # Windows: copy .env.example .env.local
 | `SUPABASE_SERVICE_ROLE_KEY` | sim | Chave service_role — **somente servidor** |
 | `DEEPSEEK_API_KEY` | não | Chave da API do DeepSeek para o SEO por IA |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | não | Envio de e-mail do formulário de contato |
+| `SMTP_FROM` / `SMTP_SECURE` | não | Remetente exibido e TLS forçado (portas não padrão) |
+| `CONTACT_RECIPIENT_EMAIL` | não | Destino das notificações (fallback do painel) |
 | `DEEPSEEK_API_URL` / `DEEPSEEK_MODEL` | não | Overrides opcionais do DeepSeek |
 
 Sem `DEEPSEEK_API_KEY` o painel continua funcionando: o SEO é gerado por uma
@@ -73,9 +75,35 @@ Faça isso **antes** do primeiro deploy (ou redeploye depois de alterar):
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOi...` | todos |
 | `SUPABASE_SERVICE_ROLE_KEY` | `sb_secret_...` | todos |
 | `DEEPSEEK_API_KEY` | `sk-...` | todos |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | … | Production |
+| `SMTP_HOST` | `smtp-relay.brevo.com` | Production, Preview |
+| `SMTP_PORT` | `587` (STARTTLS — use 465 só se necessário) | Production, Preview |
+| `SMTP_USER` | **login SMTP** do Brevo (ex.: `8f2c1b001@smtp-brevo.com`) | Production, Preview |
+| `SMTP_PASS` | **SMTP key** gerada no Brevo (não é a senha da conta) | Production, Preview |
+| `SMTP_FROM` | `Site Bianca Martins <contato@seudominio.com>` (remetente verificado) | Production, Preview |
+| `CONTACT_RECIPIENT_EMAIL` | caixa que recebe os contatos | Production, Preview |
 
-3. Clique em **Save**. A Vercel injeta os valores no build/runtime — a chave
+> 📮 **SMTP do Brevo — onde pegar os dados:** painel do Brevo →
+> **SMTP & API → aba SMTP → SMTP credentials**. Copie o **Login**
+> (`xxxxxxx@smtp-brevo.com`) para `SMTP_USER` e gere/copie a **SMTP key** para
+> `SMTP_PASS`. Antes disso, cadastre em **Senders & Domains** o e-mail que
+> aparecerá como remetente (ou autentique o domínio com SPF/DKIM/DMARC) —
+> sem remetente verificado o Brevo recusa o envio.
+>
+> 🚫 Nunca deixe `SMTP_FROM` vazio apontando para o login SMTP do Brevo: use o
+> remetente verificado da Bianca (ex.: `contato@biancamartins.com.br`), por
+> isso essa variável é **recomendada**, não opcional.
+
+> 💡 A Vercel não aplica `.env.example` automaticamente: as variáveis `SMTP_*`
+> precisam ser criadas manualmente (ou via `vercel env add SMTP_HOST` etc.).
+> Depois de salvar, **redeploy**.
+>
+> 💡 **Teste em 1 clique:** após o redeploy, abra `/admin/configuracoes` →
+> seção “E-mail de notificação” → **Verificar SMTP** (confere conexão/AUTH e
+> lista variáveis faltantes) e **Enviar e-mail de teste** (dispara para o
+> destino configurado). A rota usada é `GET|POST /api/admin/smtp-test`,
+> protegida por sessão de administrador.
+
+4. Clique em **Save**. A Vercel injeta os valores no build/runtime — a chave
    **nunca fica exposta no código** e não é enviada ao navegador
    (variáveis sem o prefixo `NEXT_PUBLIC_` existem só no servidor).
 

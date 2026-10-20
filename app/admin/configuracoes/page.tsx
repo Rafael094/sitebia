@@ -2,11 +2,14 @@ import { Bell, Clock, Link2, Mail, MapPin, MessageCircle, AtSign, Briefcase } fr
 
 import ContactChannelsSettingsForm from "@/components/admin/ContactChannelsSettingsForm";
 import EmailNotificationsForm from "@/components/admin/EmailNotificationsForm";
+import SmtpTestPanel from "@/components/admin/SmtpTestPanel";
 import { DEFAULT_CONTACT_CHANNELS } from "@/lib/constants";
+import { getSmtpStatus } from "@/lib/mailer";
 import { getStoredContactChannels } from "@/server/site-settings";
 import { getStoredNotifyRecipient } from "@/server/email-notify";
 
 export const metadata = { title: "Configurações do Site", robots: { index: false } };
+export const dynamic = "force-dynamic";
 
 export default async function SiteConfigPage() {
   let saved = DEFAULT_CONTACT_CHANNELS;
@@ -22,6 +25,8 @@ export default async function SiteConfigPage() {
   } catch {
     notifyRecipient = "";
   }
+
+  const smtp = await getSmtpStatus().catch(() => null);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -110,7 +115,7 @@ export default async function SiteConfigPage() {
         </div>
 
         <div className="mt-4">
-          <EmailNotificationsForm initial={notifyRecipient} />
+          <EmailNotificationsForm initial={notifyRecipient} smtp={smtp} />
         </div>
       </div>
     </div>
